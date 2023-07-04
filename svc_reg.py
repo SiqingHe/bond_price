@@ -9,8 +9,8 @@ import math
 from sklearn.metrics import mean_squared_error
 
 
-train_path=r"D:\python_code\LSTM-master\model_bond\bond_trdataNonull\train.json"
-valid_path=r"D:\python_code\LSTM-master\model_bond\bond_trdataNonull\valid.json"
+train_path=r"D:\python_code\LSTM-master\bond_price\bond_trdataNonull\train.json"
+valid_path=r"D:\python_code\LSTM-master\bond_price\bond_trdataNonull\valid.json"
 train_data=np.array(get_data(train_path))
 X_train,y_train=train_data[:,0:-1],train_data[:,-1]
 X_train,scalex=scaler_trans(X_train)
@@ -26,7 +26,7 @@ svc_model=SVR()
 
 svc_model.fit(X_train,y_train)
 
-save_path=r"D:\python_code\LSTM-master\model_bond\model\svm\svm_ts.pkl"
+save_path=r"D:\python_code\LSTM-master\bond_price\model\svm\svm_ts.pkl"
 if not Path(save_path).exists():
     Path(save_path).parent.mkdir(exist_ok=True,parents=True)
 joblib.dump(svc_model, save_path)

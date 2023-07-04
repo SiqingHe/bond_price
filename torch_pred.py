@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from data_torch import mydataset
 from sklearn.metrics import mean_squared_error
 import math
+import pickle
 
 def test(model,test_data,y_test,scaler,batch_size=30):
     model.eval()
@@ -33,8 +34,12 @@ def test(model,test_data,y_test,scaler,batch_size=30):
             # print("预测结果:", yhat,"真实结果:",y_real,"预测误差",np.array(yhat)-np.array(y_real))
     rmse = math.sqrt(mean_squared_error(y_pred, y_true))
     y_minus=np.abs(np.array(y_true)-np.array(y_pred))
-    y_lg10=y_minus[y_minus>10]
-    print(y_lg10)
+    y_lg10=np.where(y_minus>50)
+    # print(y_lg10,y_lg10[0].shape)
+    pkl_save=r"D:\python_code\LSTM-master\bond_price\bond_trdataNonull\mr50_trLabel.pkl"
+    with open(pkl_save,"wb") as wr:
+        pickle.dump(y_lg10,wr)
+    # print(test_data[y_lg10],len(test_data[y_lg10]))
     print('valid RMSE:%.3f' % rmse)
             
 if __name__=="__main__":
@@ -53,4 +58,4 @@ if __name__=="__main__":
     # model=mymodel()
     model=ResNet(1,1)
     model.load_state_dict(torch.load(load_path))
-    test(model,X_valid,y_valid,scaley)
+    test(model,X_train,y_train,scaley)

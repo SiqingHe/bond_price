@@ -52,10 +52,10 @@ def output_write(y_test,y_pred,save_txt):
 # 输出预测结果
 # print(y_pred)
 if __name__=="__main__":
-    train_path=r"D:\python_code\LSTM-master\model_bond\bond_trdata\train.json"
-    valid_path=r"D:\python_code\LSTM-master\model_bond\bond_trdata\valid.json"
-    save_path=r"D:\python_code\LSTM-master\model_bond\model\dcd_tree\regtree_n.pkl"
-    save_txt=r"D:\python_code\LSTM-master\model_bond\result\dcd_tree\res_compare_n.txt"
+    train_path=r"D:\python_code\LSTM-master\bond_price\bond_trdataNonull\train.json"
+    valid_path=r"D:\python_code\LSTM-master\bond_price\bond_trdataNonull\valid.json"
+    save_path=r"D:\python_code\LSTM-master\bond_price\model\dcd_tree\regtree_n.pkl"
+    save_txt=r"D:\python_code\LSTM-master\bond_price\result\dcd_tree\res_compare_n.txt"
     valid_data=np.array(get_data(valid_path))
     scaled,train_sc,valid_sc=data_pre(train_path,valid_path)
     model=model_train(train_sc[:,0:-1],train_sc[:,-1],save_path)
