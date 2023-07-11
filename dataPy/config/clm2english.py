@@ -1,0 +1,12 @@
+rn_dic={
+"日期":"date",
+ "债券ID":"bond_id",
+ "债券简称":"sec_name",
+ "成交时间":"deal_time",
+ "净价":"net_price",
+ "全价":"full_price",
+ "收益率":"yield",
+ "中债估值(行权)":"cnbd4_expire_yield",
+ "中债估值(到期)":"cnbd3_op_yield",
+ "成交-中债行权估值(BP)":"deal-cnbd_bp"
+}
