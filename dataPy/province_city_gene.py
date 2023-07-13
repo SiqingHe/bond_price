@@ -1,6 +1,7 @@
 import pandas as pd
 import dtUtils
 
+#TODO: this province_city_id.xlsx is unincomplete, need be replaced
 def region_gene(table_path,save_json):
     tb_pd=pd.read_excel(table_path,header=None)
     rank_ls=["province","city","town"]

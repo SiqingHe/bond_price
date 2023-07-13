@@ -19,18 +19,14 @@ def city(province,city,region_dict):
     #     print(province,city)
     sp_province=["北京","上海","天津","重庆","11","12","31","50"]
     if province in sp_province:
-        # province=province+"市"
-        # if province.isdigit():
-        #     province=region_dict["province"][province]
-        #     return region_dict["province"][province]+"00"
-        return region_dict["province"][province+"市"]+"00"
+        return region_dict["province"][province+"市"]+"0100"
     else:
-        # if province.isdigit():
-        #     province=region_dict["province"][province]
-        if city not in region_dict["city"][province]:
-            # print(province,city)
-            return town_city_iter(province,city,region_dict)
-        return region_dict["city"][province][city]
+        # if city not in region_dict["city"][province]:
+        #     return town_city_iter(province,city,region_dict)
+        if city not in region_dict["town"][province]:
+            print(province,city)
+            return -2
+        return region_dict["town"][province][city]
 
 def town_city_iter(province,city,region_dict):
     # print(province)
@@ -43,7 +39,7 @@ def town_city_iter(province,city,region_dict):
     print(city)
     return city
 def time_clm(tt,deal=False):
-    if tt is None or tt=="0":
+    if tt is None or tt=="0" or tt==-1:
         # print(tt)
         return tt
     tt=str(tt)
@@ -58,17 +54,36 @@ def time_clm(tt,deal=False):
             s_t=time.strptime(tt,"%Y%m%d")
     return time.mktime(s_t)
 
-def termnote1():
-    pass
+def termnote1(x):
+    x=str(x)
+    x_split=x.split("+")
+    return x_split[0]
 
+def termnote2(x):
+    x=str(x)
+    x_split=x.split("+")
+    if len(x_split)>1:
+        res=x_split[1]
+    else:
+        res=0
+    return res
+
+def termnote3(x):
+    x=str(x)
+    x_split=x.split("+")
+    if len(x_split)>2:
+        res=x_split[2]
+    else:
+        res=0
+    return res
 def issueUpdated(x,issue_list):
-    if x is None or x==0:
+    if x is None or x==0 or x==-1:
         return 0
     else:
         return issue_list.index(x)+1
 
 def enum_series(x,enum_dic,column):
-    if x is None or x=="0":
+    if x is None or x=="0" or x==-1:
         return 0
     if column=="CLAUSEABBR":
         x_split_sort=sorted(x.split(","))
@@ -103,7 +118,7 @@ def column_trans(clm,enum_json,noEnum_json,region_json):
     "cnbd3_op_yield":None,
     "deal-cnbd_bp":None,
     "PTMYEAR":None,
-    "TERMNOTE1":None,## TODO
+    "TERMNOTE1":termnote1,## TODO
     "TERMIFEXERCISE":None,
     "ISSUERUPDATED":issue_partial, ##TODO
     "LATESTPAR":None,
@@ -142,12 +157,17 @@ def column_trans(clm,enum_json,noEnum_json,region_json):
     }
     return clm_func[clm]
 def agency_guarantor(x,guarantor_list):
-    if x is None or x=="0":
+    if x is None or x=="0" or x==-1:
         return x
     return guarantor_list.index(x)+1
 
+def shift_value(df,time,column):
+    df[column+"-{}".format(time)]=df[column].shift(time)
+    return df
+
 def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     csv_pd=pd.read_csv(csv_path)
+    csv_pd.fillna(-1,inplace=True)
     # csv_pd=pd.read_excel(csv_path)
     columns=csv_pd.columns.to_list()
     copy_pd=csv_pd.copy()
@@ -160,14 +180,21 @@ def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
                 copy_pd[column]=csv_pd.apply(lambda x:trans(x[column]),axis=1)
             else:
                 copy_pd[column]=csv_pd.apply(lambda x:trans(x["PROVINCE"],x[column]),axis=1)
+    copy_pd.sort_values(by="deal_time",ascending=True,inplace=True)
+    copy_pd["termnote2"]=csv_pd.apply(lambda x:termnote2(x["TERMNOTE1"]),axis=1)
+    copy_pd["termnote3"]=csv_pd.apply(lambda x:termnote3(x["TERMNOTE1"]),axis=1)
+    copy_pd["yiled-1"]=csv_pd['yield'].shift(1)
+    copy_pd["org_date"]=csv_pd["deal_time"]
+    copy_pd["time_diff"]=copy_pd["deal_time"].diff()
+    
     # csv_pd["PROVINCE"]=csv_pd.apply(lambda x:province(x["PROVINCE"],province_dict),axis=1)
     dtUtils.csv_save(copy_pd,save_path)
     
 if __name__=="__main__":
     pass
     # province_dict=dtUtils.json_read(region_json)
-    table_trans(csv_path=r"D:\python_code\LSTM-master\bond_price\tidy2month1\chengjiao_value_138353.csv",
-                save_path=r"D:\python_code\LSTM-master\bond_price\real_data\test\chengjiao_test.csv",
+    table_trans(csv_path=r"D:\python_code\LSTM-master\bond_price\real_data\dlFt_combine\010221.IB_41.csv",
+                save_path=r"D:\python_code\LSTM-master\bond_price\real_data\test\010221.IB_41_test1.csv",
                 enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
                 noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-11.13_32_15.json",
-                region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city.json")
+                region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
