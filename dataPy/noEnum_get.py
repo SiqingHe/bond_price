@@ -23,6 +23,6 @@ def noEnum_get(org_json,excel_dir,save_dir,noEnum_ls=["ISSUERUPDATED","AGENCY_GU
     dtUtils.jsonSave(str(Path(save_dir).joinpath(save_name)),save_dic)
 
 if __name__=="__main__":
-     noEnum_get(org_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\org_noEnum.json",
-                excel_dir=r"D:\python_code\LSTM-master\bond_price\real_data\dlFt_combine",
+     noEnum_get(org_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-10.20_13_46.json",
+                excel_dir=r"D:\python_code\LSTM-master\bond_price\real_data\bondIdGroup_rn",
                 save_dir=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum")

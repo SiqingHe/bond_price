@@ -8,8 +8,8 @@ from pathlib import Path
 import os
 import datetime
 
-def get_data(json_path):
-    with open(json_path,"r",encoding="utf-8-sig") as wr:
+def json_read(json_path,encode="utf-8-sig"):
+    with open(json_path,"r",encoding=encode) as wr:
         data=json.load(wr)
     return data
 
