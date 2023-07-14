@@ -2,10 +2,12 @@ import pandas as pd
 import dtUtils
 import time
 from functools import partial
+from pathlib import Path
+from tqdm import tqdm
 
 def province(x,region_dict):
     # if x is None or x=="0":
-    if x=="0":
+    if x=="0" or x==-1:
         return x
     if x not in region_dict["province"]:
         # print(x)
@@ -13,7 +15,7 @@ def province(x,region_dict):
     return region_dict["province"][x]
 
 def city(province,city,region_dict):
-    if city=="0":
+    if city=="0" or city==-1:
         return city
     # if province=="北京市":
     #     print(province,city)
@@ -44,12 +46,17 @@ def time_clm(tt,deal=False):
         return tt
     tt=str(tt)
     if deal:
-        s_t=time.strptime(tt,"%Y%m%d-%H:%M:%S")
+        if " " in tt:
+            s_t=time.strptime(tt,"%Y-%m-%d %H:%M:%S")
+        else:
+            s_t=time.strptime(tt,"%Y%m%d-%H:%M:%S")
     else:
         if "/" in str(tt):
             s_t=time.strptime(tt,"%Y/%m/%d")
         elif "-" in tt:
             s_t=time.strptime(tt,"%Y-%m-%d")
+        elif "GMT" in tt:
+            s_t=time.strptime(tt,"%a, %d %b %Y %H:%M:%S GMT")
         else:
             s_t=time.strptime(tt,"%Y%m%d")
     return time.mktime(s_t)
@@ -183,18 +190,28 @@ def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     copy_pd.sort_values(by="deal_time",ascending=True,inplace=True)
     copy_pd["termnote2"]=csv_pd.apply(lambda x:termnote2(x["TERMNOTE1"]),axis=1)
     copy_pd["termnote3"]=csv_pd.apply(lambda x:termnote3(x["TERMNOTE1"]),axis=1)
-    copy_pd["yiled-1"]=csv_pd['yield'].shift(1)
+    copy_pd["yield-1"]=csv_pd['yield'].shift(1)
     copy_pd["org_date"]=csv_pd["deal_time"]
     copy_pd["time_diff"]=copy_pd["deal_time"].diff()
     
     # csv_pd["PROVINCE"]=csv_pd.apply(lambda x:province(x["PROVINCE"],province_dict),axis=1)
     dtUtils.csv_save(copy_pd,save_path)
-    
+
+def trans_batch(csv_dir,save_dir,enum_json,noEnum_json,region_json):
+    Path(save_dir).mkdir(exist_ok=True,parents=True)
+    for csv_path in tqdm(Path(csv_dir).glob("*.csv")):
+        save_path=str(Path(save_dir).joinpath(csv_path.name))
+        table_trans(csv_path,save_path,enum_json,noEnum_json,region_json)
 if __name__=="__main__":
     pass
     # province_dict=dtUtils.json_read(region_json)
-    table_trans(csv_path=r"D:\python_code\LSTM-master\bond_price\real_data\dlFt_combine\010221.IB_41.csv",
-                save_path=r"D:\python_code\LSTM-master\bond_price\real_data\test\010221.IB_41_test1.csv",
+    table_trans(csv_path=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dlFt_combine0714\010216.IB_7.csv",
+                save_path=r"D:\python_code\LSTM-master\bond_price\real_data\test\010216.IB_7_test.csv",
                 enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
-                noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-11.13_32_15.json",
+                noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
                 region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
+    # trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dlFt_combine0714",
+    #             save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed0714",
+    #             enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
+    #             noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
+    #             region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
