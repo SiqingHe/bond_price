@@ -114,7 +114,7 @@ def json_rem(json_origin,save_new,fetched_dir):
     new_dic={}
     for k,v in jsori.items():
         if k not in fetched:
-            new_dic[k]=v
+            new_dic[k]=sorted(set(v),key=v.index)
     print(len(new_dic))
     print(len(jsori))
     jsonSave(save_new,new_dic)
@@ -123,8 +123,8 @@ def json_rem(json_origin,save_new,fetched_dir):
 if __name__=="__main__":
     pass
     json_rem(json_origin=r"D:\python_code\LSTM-master\bond_price\config\bondid_time.json",
-             save_new=r"D:\python_code\LSTM-master\bond_price\config\bondid_time_remain.json",
-             fetched_dir=r"D:\python_code\LSTM-master\bond_price\real_data\feature_get")
+             save_new=r"D:\python_code\LSTM-master\bond_price\config\bondid_time_remain0717.json",
+             fetched_dir=r"D:\python_code\LSTM-master\bond_price\feature_data\data_all")
     # feature_path=r"E:\hsq_material\cjhx\data\债券属性数据(1).xlsx"
     # deal_path=r"E:\hsq_material\cjhx\data\成交2023年1月2月.xlsx"
     # dynamic_path1=r"E:\hsq_material\cjhx\data\债券动态数据\20230103-20230110.xlsx"
