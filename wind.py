@@ -13,7 +13,7 @@ def fetch_1day(bond_id,date,column_ls):
     wind_data1=w.wss(bond_id,column1,"tradeDate={};unit=1;ratingAgency=104;type=All;industryType=1;date={}".format(date,date))
     wind_data2=w.wss(bond_id,column2,"tradeDate={};type=1;ratingAgency=101;date={}".format(date,date))
     wind_data3=w.wss(bond_id,column3,"tradeDate={};ratingAgency=18;date={}".format(date,date))
-    print(wind_data1)
+    # print(wind_data1)
     if wind_data1.ErrorCode!=0:
         return 0
     if wind_data2.ErrorCode!=0:
@@ -52,16 +52,16 @@ def fetchid_batch(idtime_js,column_ls,save_dir,except_txt):
     with open(idtime_js,"r",encoding="utf-8-sig") as fr:
         time_dic=json.load(fr)
     for bondid,date_ls in tqdm(time_dic.items()):
-        if num>2:
-            break
+        # if num>2:
+        #     break
         save_path=str(Path(save_dir).joinpath(bondid+".csv"))
         fetch_id(bondid,date_ls,column_ls,save_path,except_txt)
         num+=1
 
 if __name__=="__main__":
     column_ls=[column1,column2,column3]
-    idtime_js=r"D:\python_code\LSTM-master\bond_price\config\bondid_time.json"
+    idtime_js=r"D:\python_code\LSTM-master\bond_price\config\bondid_time_remain0724.json"
     fetchid_batch(idtime_js,
                   column_ls,
-                  save_dir=r"D:\python_code\LSTM-master\bond_price\real_data\feature_get0710",
-                  except_txt=r"D:\python_code\LSTM-master\bond_price\real_data\fail_wd0710.txt")
+                  save_dir=r"D:\python_code\LSTM-master\bond_price\feature_data\get0724",
+                  except_txt=r"D:\python_code\LSTM-master\bond_price\real_data\fail_wd0724.txt")

@@ -1,7 +1,7 @@
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error,mean_absolute_error
 from pathlib import Path
 import joblib
 from utils import get_data,invert_scale,scaler_trans
@@ -23,10 +23,12 @@ def model_predict(model,X_test,y_test,scaley,save_txt):
     if scaley is not None:
         y_pred=invert_scale(scaley,y_pred)
     rmse=np.sqrt(mean_squared_error(y_test,y_pred))
+    mae=mean_absolute_error(y_test,y_pred)
     print("rmse",rmse)
     print(1/len(y_pred)*np.sum(np.abs(y_test-y_pred)))
+    print("mae",mae)
     output_write(y_test,y_pred,save_txt)
-    return rmse
+    return rmse,y_pred
 
 def output_write(y_test,y_pred,save_txt):
     if not Path(save_txt).exists():
@@ -38,7 +40,13 @@ def output_write(y_test,y_pred,save_txt):
                 wr.write(str(y_pred[i])+" "+str(y_test[i])+"\n")
             else:
                 wr.write(str(y_pred[i])+" "+str(y_test[i])+"\n")
-                
+
+def test_analysis(y_pred,test_pd,y_column,save_path):
+    y_test=test_pd[y_column].values
+    test_pd["y_pred"]=y_pred
+    test_pd["yt-yp"]=y_test-y_pred
+    test_pd.describe()["yt-yp"]
+    test_pd.to_csv(save_path,encoding="utf-8-sig")
 if __name__=="__main__":
     pass
     # train_path=r"D:\python_code\LSTM-master\bond_price\bond_trdataNonull\train.json"
@@ -52,19 +60,32 @@ if __name__=="__main__":
     # X_valid=scalex.transform(X_valid)
     # y_valid,scaley=scaler_trans(y_valid)
     # y_valid=scaley.transform(np.array(y_valid).reshape(-1,1))
-    train_path=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split\train.xlsx"
-    valid_path=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split\valid.xlsx"
+    train_path=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0724\train.xlsx"
+    valid_path=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0724\valid.xlsx"
+    test_path=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0724\test.xlsx"
     train_pd=pd.read_excel(train_path)
     valid_pd=pd.read_excel(valid_path)
-    # print(train_pd.dtypes)
+    test_pd=pd.read_excel(test_path)
+    
+    train_pd=train_pd.loc[(train_pd["yield"]<=50) & (train_pd["yield"]>-20) & (train_pd["yield"]!=0)]
+    valid_pd=valid_pd.loc[(valid_pd["yield"]<=50) & (valid_pd["yield"]>-20) & (train_pd["yield"]!=0)]
+    test_pd=valid_pd.loc[(test_pd["yield"]<=50) & (test_pd["yield"]>-20) & (train_pd["yield"]!=0)]
+    # print(train_pd.describe()["yield"])
     from dataPy.data_split import X_column,y_column
     # train_value=
     X_train,y_train=train_pd[X_column].values,train_pd[y_column].values
     X_valid,y_valid=valid_pd[X_column].values,valid_pd[y_column].values
-    model=RandomForestRegressor(n_estimators=100,criterion='squared_error',n_jobs=10)
-    save_path=r"D:\python_code\LSTM-master\bond_price\model\random_forest\forest0716_100.pkl"
+    X_test,y_test=test_pd[X_column].values,test_pd[y_column].values
+    model=RandomForestRegressor(n_estimators=90,criterion='squared_error',n_jobs=10)
+    save_path=r"D:\python_code\LSTM-master\bond_price\model\random_forest\forest07241_90_term_p0_no0.pkl"
     model=model_train(model,X_train,y_train,save_path)
-    save_txt=r"D:\python_code\LSTM-master\bond_price\result\randForest\res_compare0716_100.txt"
-    model_predict(model,X_valid,y_valid,None,save_txt)
+    save_txt=r"D:\python_code\LSTM-master\bond_price\result\randForest\res_compare_ts07241_90_term_p0_no0_train.txt"
+    rmse,y_pred=model_predict(model,X_train,y_train,None,save_txt)
+    test_analysis(y_pred,train_pd,y_column,
+                  save_path=r"D:\python_code\LSTM-master\bond_price\result\randForest\res_compare_ts07241_90_term_p0_no0_train.csv")
+    save_txt=r"D:\python_code\LSTM-master\bond_price\result\randForest\res_compare_ts07241_90_term_p0_no0_test.txt"
+    rmse,y_pred=model_predict(model,X_test,y_test,None,save_txt)
+    test_analysis(y_pred,test_pd,y_column,
+                  save_path=r"D:\python_code\LSTM-master\bond_price\result\randForest\res_compare_ts07241_90_term_p0_no0_test.csv")
 
 

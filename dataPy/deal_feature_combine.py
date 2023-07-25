@@ -36,12 +36,12 @@ def com_batch(deal_dir,feature_dir,save_dir):
         try:
             deal_feature_combine(deal_path,feat_path,save_dir)
         except Exception as e:
-            print(deal_path)
+            print(deal_path,e)
             # shutil.copyfile(str(feat_path),str(Path(except_path).joinpath(feat_path.name)))
             # shutil.copyfile(str(deal_path),str(Path(except_path).joinpath(deal_path.name)))
         num+=1
 if __name__=="__main__":
     pass
     com_batch(deal_dir=r"D:\python_code\LSTM-master\bond_price\real_data\group2year_contat",
-              feature_dir=r"D:\python_code\LSTM-master\bond_price\feature_data\data0714",
-              save_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dlFt_combine0714")
+              feature_dir=r"D:\python_code\LSTM-master\bond_price\feature_data\data0724",
+              save_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dlFt_combine07241")

@@ -36,8 +36,8 @@ def noEnum_get(org_json,org_Enum_json,excel_dir,save_dir,saveEnum_json):
     dtUtils.jsonSave(saveEnum_json,save_enum_dic)
 
 if __name__=="__main__":
-     noEnum_get(org_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
-                org_Enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
-                excel_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dlFt_combine0714",
+     noEnum_get(org_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.17_02_33.json",
+                org_Enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0714.json",
+                excel_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dFt_combine",
                 save_dir=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum",
-                saveEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0714.json")
+                saveEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0724.json")

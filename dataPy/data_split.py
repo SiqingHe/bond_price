@@ -11,8 +11,10 @@ X_column=["deal_time","PTMYEAR","TERMNOTE1","TERMIFEXERCISE","ISSUERUPDATED",
           "WINDL2TYPE","SUBORDINATEORNOT","PERPETUALORNOT","PRORNOT","INDUSTRY_SW",
           "ISSUE_ISSUEMETHOD","EXCH_CITY","TAXFREE","MULTIMKTORNOT","IPO_DATE",
           "MATURITYDATE","NXOPTIONDATE","NATURE1","AGENCY_GRNTTYPE","AGENCY_GUARANTOR",
-          "RATE_RATEGUARANTOR","LISTINGORNOT1","EMBEDDEDOPT","CLAUSEABBR","yield-1","time_diff"
+          "RATE_RATEGUARANTOR","LISTINGORNOT1","EMBEDDEDOPT","CLAUSEABBR",
+          "termnote2","termnote3","time_diff"
           ]
+# "yield-1","yield-2","yield-3","yield-4","yield-5",
 # "termnote2","termnote3"
 y_column=["yield"]
 
@@ -77,5 +79,5 @@ if __name__=="__main__":
     # test_table=r"D:\python_code\LSTM-master\bond_price\real_data\test\010221.IB_41_test1.csv"
     # test_pd=pd.read_csv(test_table,index_col="org_date")
     # xy_split(test_pd,X_column,y_column)
-    data_add(table_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed0715",
-             save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split")
+    data_add(table_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed0724",
+             save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0724")

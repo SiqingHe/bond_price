@@ -72,8 +72,8 @@ def termnote2(x):
     if len(x_split)>1:
         res=x_split[1]
     else:
-        res=0
-    return res
+        return None
+    return res if res!="--" else 0.5
 
 def termnote3(x):
     x=str(x)
@@ -81,8 +81,8 @@ def termnote3(x):
     if len(x_split)>2:
         res=x_split[2]
     else:
-        res=0
-    return res
+        return None
+    return res if res!="N" else 100
 def issueUpdated(x,issue_list):
     if x is None or x==0 or x==-1:
         return 0
@@ -190,10 +190,17 @@ def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     copy_pd.sort_values(by="deal_time",ascending=True,inplace=True)
     copy_pd["termnote2"]=csv_pd.apply(lambda x:termnote2(x["TERMNOTE1"]),axis=1)
     copy_pd["termnote3"]=csv_pd.apply(lambda x:termnote3(x["TERMNOTE1"]),axis=1)
+    copy_pd=copy_pd.loc[(copy_pd["yield"]<=50) & (copy_pd["yield"]>-20) & (copy_pd["yield"]!=0)]
+    if copy_pd.shape[0]<1:
+        return 
     copy_pd["yield-1"]=copy_pd['yield'].shift(1)
+    copy_pd["yield-2"]=copy_pd['yield'].shift(2)
+    copy_pd["yield-3"]=copy_pd['yield'].shift(3)
+    copy_pd["yield-4"]=copy_pd['yield'].shift(4)
+    copy_pd["yield-5"]=copy_pd['yield'].shift(5)
     copy_pd["org_date"]=csv_pd["deal_time"]
     copy_pd["time_diff"]=copy_pd["deal_time"].diff()
-    
+    # print(copy_pd.dtypes)
     # csv_pd["PROVINCE"]=csv_pd.apply(lambda x:province(x["PROVINCE"],province_dict),axis=1)
     dtUtils.csv_save(copy_pd,save_path)
 
@@ -201,15 +208,18 @@ def trans_batch(csv_dir,save_dir,enum_json,noEnum_json,region_json):
     Path(save_dir).mkdir(exist_ok=True,parents=True)
     import os
     dir_num=len(os.listdir(csv_dir))
+    num=0
     for csv_path in tqdm(Path(csv_dir).glob("*.csv"),total=dir_num):
         save_path=str(Path(save_dir).joinpath(csv_path.name))
         if Path(save_path).exists():continue
+        # if num>10:break
         try:
             table_trans(csv_path,save_path,enum_json,noEnum_json,region_json)
         except Exception as e:
             print(e)
             print(csv_path.name)
             continue
+        num+=1
 if __name__=="__main__":
     pass
     # province_dict=dtUtils.json_read(region_json)
@@ -218,8 +228,8 @@ if __name__=="__main__":
     #             enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
     #             noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
     #             region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
-    trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dlFt_combine0714",
-                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed0715",
-                enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0714.json",
-                noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
+    trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dFt_combine",
+                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed0724",
+                enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0724.json",
+                noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-24.20_34_05.json",
                 region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
