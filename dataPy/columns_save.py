@@ -6,5 +6,5 @@ def column_save(table_path,save_json):
     dtUtils.jsonSave(save_json,df.columns.to_list())
     
 if __name__=="__main__":
-    column_save(table_path=r"D:\python_code\LSTM-master\bond_price\real_data\dlFt_combine\010011.IB_2.csv",
-                save_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\column.json")
+    column_save(table_path=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year_contat\7103.IB_4.csv",
+                save_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\column_0726.json")

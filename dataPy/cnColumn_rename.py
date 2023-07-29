@@ -1,9 +1,9 @@
 import pandas as pd
-from config import clm2English_old
+from config import clm2English_old2
 import dtUtils
 from pathlib import Path
 
-rn_dict=clm2English_old.rn_dic
+rn_dict=clm2English_old2.rn_dic
 
 
 def clm_rename_batch(table_dir,save_dir,rn_dict):
@@ -19,7 +19,7 @@ def clm_rename_batch(table_dir,save_dir,rn_dict):
 
 if __name__=="__main__":
     pass
-    clm_rename_batch(table_dir=r"D:\python_code\LSTM-master\bond_price\tidy2month",
-                     save_dir=r"D:\python_code\LSTM-master\bond_price\tidy2month1",
+    clm_rename_batch(table_dir=r"E:\hsq_material\cjhx\data\deal_split\data_2y",
+                     save_dir=r"E:\hsq_material\cjhx\data\deal_split\data_2y_rm",
                      rn_dict=rn_dict)
 

@@ -37,7 +37,7 @@ def combine_list(pd_list):
     return dy_pd
 
 def splitById(excel_pd,save_dir):
-    group_data=excel_pd.groupby("债券ID")
+    group_data=excel_pd.groupby("bond_id")
     Path(save_dir).mkdir(exist_ok=True,parents=True)
     for group,df in group_data:
         times=df.shape[0]
@@ -53,7 +53,7 @@ def kind2():
 def deal2bondId(deal_excel_dir,save_dir):
     if not Path(save_dir).exists():
         Path(save_dir).mkdir(exist_ok=True,parents=True)
-    for excel_pd in read_table_iter(deal_excel_dir,suffix=".xlsx"):
+    for excel_pd in read_table_iter(deal_excel_dir,suffix=".csv",header=0):
         splitById(excel_pd,save_dir)
 
 def itertt(): 
@@ -104,7 +104,7 @@ def bondid_corr_combine(group_dir,save_dir):
             combine_pd=combine_list(pd_list)
             times=combine_pd.shape[0]
             save_path=Path(save_dir).joinpath(k+"_{}.csv".format(times))
-            combine_pd.sort_values(by="日期", inplace=True, ascending=True)
+            combine_pd.sort_values(by="deal_time", inplace=True, ascending=True)
             csv_save(combine_pd,save_path)
 
 def json_rem(json_origin,save_new,fetched_dir):
@@ -122,9 +122,9 @@ def json_rem(json_origin,save_new,fetched_dir):
 
 if __name__=="__main__":
     pass
-    json_rem(json_origin=r"D:\python_code\LSTM-master\bond_price\config\bondid_time_remain0718.json",
-             save_new=r"D:\python_code\LSTM-master\bond_price\config\bondid_time_remain0724.json",
-             fetched_dir=r"D:\python_code\LSTM-master\bond_price\feature_data\data_all")
+    # json_rem(json_origin=r"D:\python_code\LSTM-master\bond_price\config\bondid_time_remain0718.json",
+    #          save_new=r"D:\python_code\LSTM-master\bond_price\config\bondid_time_remain0724.json",
+    #          fetched_dir=r"D:\python_code\LSTM-master\bond_price\feature_data\data_all")
     # feature_path=r"E:\hsq_material\cjhx\data\债券属性数据(1).xlsx"
     # deal_path=r"E:\hsq_material\cjhx\data\成交2023年1月2月.xlsx"
     # dynamic_path1=r"E:\hsq_material\cjhx\data\债券动态数据\20230103-20230110.xlsx"
@@ -161,8 +161,8 @@ if __name__=="__main__":
     # columns=excel_pd.columns.to_list()
     # save_path=r"D:\python_code\LSTM-master\bond_price\real_data\column2english.json"
     # jsonSave(save_path,columns)
-    # deal2bondId(deal_excel_dir=r"E:\hsq_material\cjhx\data\deal_data",
-    #             save_dir=r"D:\python_code\LSTM-master\bond_price\real_data\group2year")
+    # deal2bondId(deal_excel_dir=r"E:\hsq_material\cjhx\data\deal_split\data_2y_rm",
+    #             save_dir=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year")
     # bondid_path_corr(deal_dir=r"D:\python_code\LSTM-master\bond_price\real_data\group2year")
-    # bondid_corr_combine(group_dir=r"D:\python_code\LSTM-master\bond_price\real_data\group2year",
-    #                     save_dir=r"D:\python_code\LSTM-master\bond_price\real_data\group2year_contat")
+    bondid_corr_combine(group_dir=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year",
+                        save_dir=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year_contat")

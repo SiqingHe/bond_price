@@ -115,3 +115,12 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
 def tm_format_trans(tt):
     tr=datetime.datetime.strptime(str(tt),"%Y%m%d") 
     return tr.strftime("%Y-%m-%d")
+
+def configSave(cfg,saveDir):
+    ticn=datetime.datetime.now().strftime('%y.%m.%d.%H.%M.%S')
+    basePath=Path(datetime.datetime.now().strftime('%y.%m.%d'))
+    # saveCfg=Path(saveDir).joinpath(basePath).joinpath("config.yaml")
+    saveCfg=Path(saveDir).joinpath("config_{}.yaml".format(ticn))
+    Path(saveCfg).parent.mkdir(exist_ok=True,parents=True)
+    with open(saveCfg,"w") as file:
+        file.write(cfg.dump())

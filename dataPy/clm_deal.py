@@ -7,15 +7,15 @@ from tqdm import tqdm
 
 def province(x,region_dict):
     # if x is None or x=="0":
-    if x=="0" or x==-1:
+    if x=="0" or x==-1 or x==0:
         return x
     if x not in region_dict["province"]:
         # print(x)
-        x=x+"市"
+        x=str(x)+"市"
     return region_dict["province"][x]
 
 def city(province,city,region_dict):
-    if city=="0" or city==-1:
+    if city=="0" or city==-1 or city==0:
         return city
     # if province=="北京市":
     #     print(province,city)
@@ -26,6 +26,11 @@ def city(province,city,region_dict):
         # if city not in region_dict["city"][province]:
         #     return town_city_iter(province,city,region_dict)
         if city not in region_dict["town"][province]:
+            city_t=city.replace("市","县")
+            if city  in region_dict["city"][province]:
+                return region_dict["city"][province][city]+"01"
+            elif city_t in region_dict["town"][province]:
+                return region_dict["town"][province][city_t]
             print(province,city)
             return -2
         return region_dict["town"][province][city]
@@ -41,7 +46,7 @@ def town_city_iter(province,city,region_dict):
     print(city)
     return city
 def time_clm(tt,deal=False):
-    if tt is None or tt=="0" or tt==-1:
+    if tt is None or tt=="0" or tt==-1 or tt==0:
         # print(tt)
         return tt
     tt=str(tt)
@@ -51,6 +56,7 @@ def time_clm(tt,deal=False):
         else:
             s_t=time.strptime(tt,"%Y%m%d-%H:%M:%S")
     else:
+        tt=tt.strip(" 00:00:00")
         if "/" in str(tt):
             s_t=time.strptime(tt,"%Y/%m/%d")
         elif "-" in tt:
@@ -90,8 +96,8 @@ def issueUpdated(x,issue_list):
         return issue_list.index(x)+1
 
 def enum_series(x,enum_dic,column):
-    if x is None or x=="0" or x==-1:
-        return 0
+    if x is None or x=="0" or x==-1 or x==0:
+        return x
     if column=="CLAUSEABBR":
         x_split_sort=sorted(x.split(","))
         x=",".join(x_split_sort)
@@ -164,7 +170,7 @@ def column_trans(clm,enum_json,noEnum_json,region_json):
     }
     return clm_func[clm]
 def agency_guarantor(x,guarantor_list):
-    if x is None or x=="0" or x==-1:
+    if x is None or x=="0" or x==-1 or x==0:
         return x
     return guarantor_list.index(x)+1
 
@@ -172,13 +178,22 @@ def shift_value(df,time,column):
     df[column+"-{}".format(time)]=df[column].shift(time)
     return df
 
+def clauseabbr(x,idx):
+    if x is None or x=="0" or x==-1 or x==0:
+        return x
+    clause_list=["A","C","Etc","P","Pr","S","T"]
+    x_split=x.split(",")
+    if clause_list[idx] in x_split:
+        return 1
+    else:
+        return 0
 def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     csv_pd=pd.read_csv(csv_path)
     csv_pd.fillna(-1,inplace=True)
     # csv_pd=pd.read_excel(csv_path)
     columns=csv_pd.columns.to_list()
     copy_pd=csv_pd.copy()
-    ignore_ls=['Unnamed: 0','cjhx_rate','cjhx_quantile']
+    ignore_ls=['Unnamed: 0','cjhx_rate','cjhx_quantile',"Unnamed: 0.1","CLAUSEABBR"]
     for column in columns:
         if column in ignore_ls:continue
         trans=column_trans(column,enum_json,noEnum_json,region_json)
@@ -190,16 +205,23 @@ def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     copy_pd.sort_values(by="deal_time",ascending=True,inplace=True)
     copy_pd["termnote2"]=csv_pd.apply(lambda x:termnote2(x["TERMNOTE1"]),axis=1)
     copy_pd["termnote3"]=csv_pd.apply(lambda x:termnote3(x["TERMNOTE1"]),axis=1)
+    for i in range(7):
+        copy_pd["CLAUSEABBR_{}".format(i)]=csv_pd.apply(lambda x:clauseabbr(x["CLAUSEABBR"],i),axis=1)
     copy_pd=copy_pd.loc[(copy_pd["yield"]<=50) & (copy_pd["yield"]>-20) & (copy_pd["yield"]!=0)]
     if copy_pd.shape[0]<1:
-        return 
-    copy_pd["yield-1"]=copy_pd['yield'].shift(1)
-    copy_pd["yield-2"]=copy_pd['yield'].shift(2)
-    copy_pd["yield-3"]=copy_pd['yield'].shift(3)
-    copy_pd["yield-4"]=copy_pd['yield'].shift(4)
-    copy_pd["yield-5"]=copy_pd['yield'].shift(5)
+        return
     copy_pd["org_date"]=csv_pd["deal_time"]
     copy_pd["time_diff"]=copy_pd["deal_time"].diff()
+    for yi in range(5):
+        copy_pd["yield-{}".format(yi+1)] = copy_pd['yield'].shift(yi+1)
+        copy_pd["time_diff-{}".format(yi+1)] = copy_pd['time_diff'].shift(yi+1)
+        copy_pd["yd*diff-{}".format(yi+1)] = copy_pd["yield-{}".format(yi+1)]*copy_pd["time_diff-{}".format(yi+1)]
+    # copy_pd["yield-1"]=copy_pd['yield'].shift(1)
+    # copy_pd["yield-2"]=copy_pd['yield'].shift(2)
+    # copy_pd["yield-3"]=copy_pd['yield'].shift(3)
+    # copy_pd["yield-4"]=copy_pd['yield'].shift(4)
+    # copy_pd["yield-5"]=copy_pd['yield'].shift(5)
+    
     # print(copy_pd.dtypes)
     # csv_pd["PROVINCE"]=csv_pd.apply(lambda x:province(x["PROVINCE"],province_dict),axis=1)
     dtUtils.csv_save(copy_pd,save_path)
@@ -212,13 +234,14 @@ def trans_batch(csv_dir,save_dir,enum_json,noEnum_json,region_json):
     for csv_path in tqdm(Path(csv_dir).glob("*.csv"),total=dir_num):
         save_path=str(Path(save_dir).joinpath(csv_path.name))
         if Path(save_path).exists():continue
-        # if num>10:break
-        try:
-            table_trans(csv_path,save_path,enum_json,noEnum_json,region_json)
-        except Exception as e:
-            print(e)
-            print(csv_path.name)
-            continue
+        if num>10:break
+        table_trans(csv_path,save_path,enum_json,noEnum_json,region_json)
+        # try:
+        #     table_trans(csv_path,save_path,enum_json,noEnum_json,region_json)
+        # except Exception as e:
+        #     print(e)
+        #     print(csv_path.name)
+        #     continue
         num+=1
 if __name__=="__main__":
     pass
@@ -228,8 +251,8 @@ if __name__=="__main__":
     #             enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
     #             noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
     #             region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
-    trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dFt_combine",
-                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed0724",
-                enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0724.json",
-                noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-24.20_34_05.json",
+    trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\tt_clau0729",
+                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_0729t",
+                enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0726.json",
+                noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-26.20_15_14.json",
                 region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
