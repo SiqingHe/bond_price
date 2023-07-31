@@ -131,5 +131,6 @@ def log_set(filename,log_level,filemode="w"):
                         filemode=filemode,
                         format="%(asctime)s %(name)s:%(levelname)s:%(message)s",
                         datefmt="%d-%M-%Y %H:%M:%S",
-                        level=log_level
+                        level=log_level,
+                        encoding="utf-8"
                         )
