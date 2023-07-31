@@ -7,6 +7,7 @@ import pandas as pd
 from pathlib import Path
 import os
 import datetime
+import logging
 
 def json_read(json_path,encode="utf-8-sig"):
     with open(json_path,"r",encoding=encode) as wr:
@@ -124,3 +125,11 @@ def configSave(cfg,saveDir):
     Path(saveCfg).parent.mkdir(exist_ok=True,parents=True)
     with open(saveCfg,"w") as file:
         file.write(cfg.dump())
+        
+def log_set(filename,log_level,filemode="w"):
+    logging.basicConfig(filename=filename,
+                        filemode=filemode,
+                        format="%(asctime)s %(name)s:%(levelname)s:%(message)s",
+                        datefmt="%d-%M-%Y %H:%M:%S",
+                        level=log_level
+                        )

@@ -11,13 +11,13 @@ _C.PARAM.DEVICE = "cuda"
 _C.PARAM.SUBSAMPLE = 0.7
 _C.PARAM.ALPHA = 0.5
 _C.PARAM.VERBOSITY = 0
-_C.EARLY_STOPPING  =  0
+_C.EARLY_STOPPING  =  1
 _C.NUM_ROUND  =  3500
 _C.EVAL_NAME = "valid"
 _C.EARLY_STOP_ROUNDS = 15
-_C.TRAIN_PATH = "dealed_dir\\sets_split0727\\train.csv"
-_C.VALID_PATH = "dealed_dir\\sets_split0727\\valid.csv"
-_C.TEST_PATH =  "dealed_dir\\sets_split0727\\test.csv"
+_C.TRAIN_PATH = "dealed_dir\\sets_split0729\\train.csv"
+_C.VALID_PATH = "dealed_dir\\sets_split0729\\valid.csv"
+_C.TEST_PATH =  "dealed_dir\\sets_split0729\\test.csv"
 _C.MODEL_SAVE = "model\\xgboost\\res"
 _C.X_COLUMN = ["deal_time","PTMYEAR","TERMNOTE1","TERMIFEXERCISE","ISSUERUPDATED",
           "LATESTPAR","ISSUEAMOUNT","OUTSTANDINGBALANCE","LATESTISSURERCREDITRATING",
@@ -26,8 +26,10 @@ _C.X_COLUMN = ["deal_time","PTMYEAR","TERMNOTE1","TERMIFEXERCISE","ISSUERUPDATED
           "WINDL2TYPE","SUBORDINATEORNOT","PERPETUALORNOT","PRORNOT","INDUSTRY_SW",
           "ISSUE_ISSUEMETHOD","EXCH_CITY","TAXFREE","MULTIMKTORNOT","IPO_DATE",
           "MATURITYDATE","NXOPTIONDATE","NATURE1","AGENCY_GRNTTYPE","AGENCY_GUARANTOR",
-          "RATE_RATEGUARANTOR","LISTINGORNOT1","EMBEDDEDOPT","CLAUSEABBR",
-          "termnote2","termnote3","time_diff","yield-1","yield-2","yield-3"
+          "RATE_RATEGUARANTOR","LISTINGORNOT1","EMBEDDEDOPT","CLAUSEABBR_0",
+          "CLAUSEABBR_1","CLAUSEABBR_2","CLAUSEABBR_3","CLAUSEABBR_4",
+          "CLAUSEABBR_5","CLAUSEABBR_6","yd*diff-1",
+          "termnote2","termnote3","time_diff","time_diff-1","yield-1","yield-2","yield-3"
           ]
 # "yield-1","yield-2","yield-3","yield-4","yield-5",
 # "termnote2","termnote3"

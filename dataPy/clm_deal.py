@@ -234,7 +234,7 @@ def trans_batch(csv_dir,save_dir,enum_json,noEnum_json,region_json):
     for csv_path in tqdm(Path(csv_dir).glob("*.csv"),total=dir_num):
         save_path=str(Path(save_dir).joinpath(csv_path.name))
         if Path(save_path).exists():continue
-        if num>10:break
+        # if num>10:break
         table_trans(csv_path,save_path,enum_json,noEnum_json,region_json)
         # try:
         #     table_trans(csv_path,save_path,enum_json,noEnum_json,region_json)
@@ -251,8 +251,8 @@ if __name__=="__main__":
     #             enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
     #             noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
     #             region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
-    trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\tt_clau0729",
-                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_0729t",
+    trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year_contat",
+                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_0729",
                 enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0726.json",
                 noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-26.20_15_14.json",
                 region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")

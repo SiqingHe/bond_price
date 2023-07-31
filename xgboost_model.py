@@ -13,6 +13,7 @@ from config import xgboost_cfg
 from dataPy import dtUtils
 import os
 import numpy as np
+import logging
 
 cfg = xgboost_cfg.cfg
 cfg_param = xgboost_cfg.cfg.PARAM
@@ -61,6 +62,7 @@ def param_xgbTrain(param,saveDir,num_round,X_train,y_train,X_valid,y_valid):
                             )
     actual_num_rounds = xgb_model.best_iteration + 1
     print("actual num rounds",actual_num_rounds)
+    logging.info("actual num rounds : {}".format(actual_num_rounds))
     model_path = Path(saveDir).joinpath("model.pkl")
     joblib.dump(xgb_model, model_path)
     return xgb_model
@@ -72,6 +74,7 @@ def param_xgbPredict(model,X_test,y_test):
     # print(X_test)
     # print(y_pred)
     mae = mean_absolute_error(y_test,y_pred)
+    logging.info("mae:{}".format(str(mae)))
     print("mae",mae)
     return y_pred
 
@@ -104,16 +107,20 @@ def get_param(cfgPARAM):
     return param
 
 def main():
+    # TODO: add others xgboost
     current_path = os.path.abspath(os.path.dirname(__file__))
+    model_save = dtUtils.increment_path(str(Path(current_path).joinpath(cfg.MODEL_SAVE)))
+    Path(model_save).mkdir(exist_ok=True,parents=True)
+    log_save = str(Path(model_save).joinpath("xgboost.log"))
+    dtUtils.log_set(log_save,log_level = logging.INFO)
     param = get_param(cfg_param)
     train_path = str(Path(current_path).joinpath(cfg.TRAIN_PATH))
     valid_path = str(Path(current_path).joinpath(cfg.VALID_PATH))
     test_path = str(Path(current_path).joinpath(cfg.TEST_PATH))
     X_column = cfg.X_COLUMN
     y_column = cfg.Y_COLUMN
-    train_pd,valid_pd,test_pd = setsDtGet(train_path,valid_path,test_path,X_column,y_column)
-    X_train,y_train,X_valid,y_valid,X_test,y_test  =  xgbValue_get(train_pd,valid_pd,test_pd)
-    model_save = dtUtils.increment_path(str(Path(current_path).joinpath(cfg.MODEL_SAVE)))
+    train_pd,valid_pd,test_pd = setsDtGet(train_path,valid_path,test_path)
+    X_train,y_train,X_valid,y_valid,X_test,y_test  =  xgbValue_get(train_pd,valid_pd,test_pd,X_column,y_column)
     dtUtils.configSave(cfg,model_save)
     model = param_xgbTrain(param,model_save,cfg.NUM_ROUND,X_train,y_train,X_valid,y_valid)
     train_pred = param_xgbPredict(model,X_train,y_train)
