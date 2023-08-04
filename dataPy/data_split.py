@@ -94,5 +94,5 @@ if __name__=="__main__":
     # test_table=r"D:\python_code\LSTM-master\bond_price\real_data\test\010221.IB_41_test1.csv"
     # test_pd=pd.read_csv(test_table,index_col="org_date")
     # xy_split(test_pd,X_column,y_column)
-    data_add(table_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_0729",
-             save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0729")
+    data_add(table_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_08032",
+             save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split08032")

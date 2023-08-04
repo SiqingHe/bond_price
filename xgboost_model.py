@@ -24,9 +24,12 @@ def setsDtGet(train_path,valid_path,test_path):
     # train_pd = pd.read_excel(train_path)
     # valid_pd = pd.read_excel(valid_path)
     # test_pd = pd.read_excel(test_path)
-    train_pd = pd.read_csv(train_path,encoding = "gbk")
-    valid_pd = pd.read_csv(valid_path,encoding = "gbk")
-    test_pd = pd.read_csv(test_path,encoding = "gbk")
+    type = dict(cfg.DTYPE)
+    train_pd = pd.read_csv(train_path,encoding = "utf-8-sig",dtype=type)
+    valid_pd = pd.read_csv(valid_path,encoding = "utf-8-sig",dtype=type)
+    test_pd = pd.read_csv(test_path,encoding = "utf-8-sig",dtype=type)
+    
+    # print(set(train_pd["GDP"].values.tolist()))
 
     train_pd = train_pd.loc[(train_pd["yield"]<= 50) & (train_pd["yield"]>-20) & (train_pd["yield"]!= 0)]
     valid_pd = valid_pd.loc[(valid_pd["yield"]<= 50) & (valid_pd["yield"]>-20) & (valid_pd["yield"]!= 0)]
@@ -89,14 +92,25 @@ def residule_record(y_pred,test_pd,y_column,save_path,message="train"):
     credit_pd = test_pd[~test_pd["ISSUERUPDATED"].isin([110,1180,1831,2047])]
     logging.info("{} 利率债数量 : {}".format(message,interest_pd.shape[0]))
     logging.info("{} 利率债mae : {}".format(message, np.mean(interest_pd["|yt-yp|"])))
-    logging.info("{} 利率债mae大于0.1数量 : {}".format(message, interest_pd[interest_pd["|yt-yp|"]>0.1].shape[0]))
+    interest_err_pd = interest_pd[interest_pd["|yt-yp|"]>0.1]
+    logging.info("{} 利率债mae大于0.1数量 : {}".format(message, interest_err_pd.shape[0]))
+    
+    save_interest_err = str(Path(save_path).parent.joinpath(Path(save_path).stem+"_berr_interset.csv"))
+    interest_err_pd.to_csv(save_interest_err,encoding="utf-8-sig")
+    
     interest_time_pd = interest_pd[(interest_pd["|yt-yp|"]>0.1) & (interest_pd["time_diff"]<3600) \
                                    & (interest_pd["time_diff"]!=-1)]
     logging.info("{} 利率债mae大于0.1 且时间差小于3600 数量 : {}".\
                  format(message, interest_time_pd.shape[0]))
     logging.info("{} 信用债数量 : {}".format(message, credit_pd.shape[0]))
     logging.info("{} 信用债mae : {}".format(message, np.mean(credit_pd["|yt-yp|"])))
-    logging.info("{} 信用债mae大于0.1数量 : {}".format(message, credit_pd[credit_pd["|yt-yp|"]>0.1].shape[0]))
+    
+    credit_err_pd = credit_pd[credit_pd["|yt-yp|"]>0.1]
+    logging.info("{} 信用债mae大于0.1数量 : {}".format(message, credit_err_pd.shape[0]))
+    
+    save_credit_err = str(Path(save_path).parent.joinpath(Path(save_path).stem+"_berr_credit.csv"))
+    credit_err_pd.to_csv(save_credit_err,encoding="utf-8-sig")
+    
     credit_time_pd = credit_pd[(credit_pd["|yt-yp|"]>0.1) & (credit_pd["time_diff"]<3600) \
                                & (credit_pd["time_diff"]!=-1)]
     logging.info("{} 信用债mae大于0.1 且时间差小于3600 数量 : {}".\
@@ -119,6 +133,7 @@ def get_param(cfgPARAM):
         "device":cfgPARAM.DEVICE,
         "subsample":cfgPARAM.SUBSAMPLE,
         "alpha":cfgPARAM.ALPHA,
+        "colsample_bytree":cfgPARAM.COLSAMPLE_BYTREE,
         "verbosity":cfgPARAM.VERBOSITY
          }
     return param
