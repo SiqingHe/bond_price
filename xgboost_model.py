@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 import joblib
 import time
+import datetime
 from config import xgboost_cfg
 from dataPy import dtUtils
 import os
@@ -18,13 +19,85 @@ import logging
 cfg = xgboost_cfg.cfg
 cfg_param = xgboost_cfg.cfg.PARAM
 
-
+pdtype =[
+           ("deal_time",int),
+           ("date",int),
+           ("PTMYEAR",float),
+           ("TERMNOTE1",float),
+           ("TERMIFEXERCISE",float),
+           ("ISSUERUPDATED",int),
+         ("LATESTPAR",float),
+         ("ISSUEAMOUNT",float),
+         ("OUTSTANDINGBALANCE",float),
+         ("LATESTISSURERCREDITRATING",int),
+         ("RATINGOUTLOOKS",int),
+         ("RATE_RATEBOND",int),
+         ("RATE_RATEBOND2",int),
+         ("RATE_LATESTMIR_CNBD",int),
+         ("INTERESTTYPE",int),
+         ("COUPONRATE",float),
+         ("COUPONRATE2",float),
+         ("PROVINCE",int),
+         ("CITY",int),
+         ("MUNICIPALBOND",int),
+         ("WINDL2TYPE",int),
+         ("SUBORDINATEORNOT",int),
+         ("PERPETUALORNOT",int),
+         ("PRORNOT",int),
+         ("INDUSTRY_SW",int),
+         ("ISSUE_ISSUEMETHOD",int),
+         ("EXCH_CITY",int),
+         ("TAXFREE",int),
+         ("MULTIMKTORNOT",int),
+         ("IPO_DATE",int),
+         ("MATURITYDATE",float),
+         ("NXOPTIONDATE",float),
+         ("NATURE1",int),
+         ("AGENCY_GRNTTYPE",int),
+         ("AGENCY_GUARANTOR",int),
+         ("RATE_RATEGUARANTOR",int),
+         ("LISTINGORNOT1",int),
+         ("EMBEDDEDOPT",int),
+         ("CLAUSEABBR_0",int),
+         ("CLAUSEABBR_1",int),
+         ("CLAUSEABBR_2",int),
+         ("CLAUSEABBR_3",int),
+         ("CLAUSEABBR_4",int),
+         ("CLAUSEABBR_5",int),
+         ("CLAUSEABBR_6",int),
+         ("termnote2",float),
+         ("termnote3",int),
+         ("time_diff",float),
+         ("time_diff-1",float),
+         ("time_diff-2",float),
+         ("time_diff-3",float),
+         ("time_diff-4",float),
+         ("time_diff-5",float),
+         ("yd*diff-1",float),
+         ("yield-1",float),
+         ("yield-2",float),
+         ("yield-3",float),
+         ("yield-4",float),
+         ("yield-5",float),
+         ("GDP",float),
+         ("GENERAL_BUDGET_MONEY",float),
+         ("SSSR_RADIO",float),
+         ("CZZJL",float),
+           ("ZFXJJ_MONEY",float),
+           ("ZFZWYE",float),
+           ("QYFZCTYX",float),
+           ("QYFZCTCXZ",float),
+           ("QYFZCTCXZ_RADIO",float),
+           ("CTYXZWZS",float),
+           ("CTYXZWBS",float)
+]
 
 def setsDtGet(train_path,valid_path,test_path):
     # train_pd = pd.read_excel(train_path)
     # valid_pd = pd.read_excel(valid_path)
     # test_pd = pd.read_excel(test_path)
-    type = dict(cfg.DTYPE)
+    type = dict(pdtype)
+    
     train_pd = pd.read_csv(train_path,encoding = "utf-8-sig",dtype=type)
     valid_pd = pd.read_csv(valid_path,encoding = "utf-8-sig",dtype=type)
     test_pd = pd.read_csv(test_path,encoding = "utf-8-sig",dtype=type)
@@ -95,6 +168,15 @@ def residule_record(y_pred,test_pd,y_column,save_path,message="train"):
     interest_err_pd = interest_pd[interest_pd["|yt-yp|"]>0.1]
     logging.info("{} 利率债mae大于0.1数量 : {}".format(message, interest_err_pd.shape[0]))
     
+    interest_err_pd5bp = interest_pd[interest_pd["|yt-yp|"]>0.05]
+    logging.info("{} 利率债mae大于0.05数量: {},比例为: {}".format(message, 
+                                                        interest_err_pd5bp.shape[0],
+                                                        interest_err_pd5bp.shape[0]/interest_pd.shape[0]))
+    interest_err_pd1bp = interest_pd[interest_pd["|yt-yp|"]>0.01]
+    logging.info("{} 利率债mae大于0.01数量: {},比例为: {}".format(message, 
+                                                        interest_err_pd1bp.shape[0],
+                                                        interest_err_pd1bp.shape[0]/interest_pd.shape[0]))
+    
     save_interest_err = str(Path(save_path).parent.joinpath(Path(save_path).stem+"_berr_interset.csv"))
     interest_err_pd.to_csv(save_interest_err,encoding="utf-8-sig")
     
@@ -108,6 +190,8 @@ def residule_record(y_pred,test_pd,y_column,save_path,message="train"):
     credit_err_pd = credit_pd[credit_pd["|yt-yp|"]>0.1]
     logging.info("{} 信用债mae大于0.1数量 : {}".format(message, credit_err_pd.shape[0]))
     
+    credit_city_pd = credit_pd[credit_pd["|yt-yp|"]>0.1]
+    
     save_credit_err = str(Path(save_path).parent.joinpath(Path(save_path).stem+"_berr_credit.csv"))
     credit_err_pd.to_csv(save_credit_err,encoding="utf-8-sig")
     
@@ -117,9 +201,9 @@ def residule_record(y_pred,test_pd,y_column,save_path,message="train"):
                  format(message, credit_time_pd.shape[0]))
     test_pd.to_csv(save_path,encoding = "utf-8-sig")
 
-def xgboost_analyse(model,save_path):
-    plt.rcParams['font.size']  =  5
-    plot_importance(model)#打印重要程度结果
+def xgboost_analyse(model,save_path,importance_type="weight"):
+    plt.rcParams['font.size']  =  4
+    plot_importance(model,importance_type=importance_type)#打印重要程度结果
     plt.savefig(save_path,dpi = 300,bbox_inches = 'tight')
     # plt.show()
     
@@ -141,7 +225,8 @@ def get_param(cfgPARAM):
 def main():
     # TODO: add others xgboost
     current_path = os.path.abspath(os.path.dirname(__file__))
-    model_save = dtUtils.increment_path(str(Path(current_path).joinpath(cfg.MODEL_SAVE)))
+    today = datetime.datetime.now().strftime('%y.%m.%d')
+    model_save = dtUtils.increment_path(str(Path(current_path).joinpath(cfg.MODEL_TAG).joinpath(today).joinpath(cfg.MODEL_SAVE)))
     Path(model_save).mkdir(exist_ok=True,parents=True)
     log_save = str(Path(model_save).joinpath("xgboost.log"))
     dtUtils.log_set(log_save,log_level = logging.INFO)
@@ -165,7 +250,9 @@ def main():
     residule_record(valid_pred,valid_pd,y_column,save_valid,message = "验证集")
     residule_record(test_pred,test_pd,y_column,save_test,message = "测试集")
     save_importance = str(Path(current_path).joinpath(model_save).joinpath("importance.png"))
+    save_gain = str(Path(current_path).joinpath(model_save).joinpath("importance_gain.png"))
     xgboost_analyse(model,save_importance)
+    xgboost_analyse(model,save_gain,importance_type="gain")
 if __name__ == "__main__":
     pass
     main()

@@ -29,7 +29,7 @@ def city(province,city,region_dict):
         # if city not in region_dict["city"][province]:
         #     return town_city_iter(province,city,region_dict)
         if city not in region_dict["town"][province]:
-            city_t=city.replace("市","县")
+            city_t = city.replace("市","县")
             if city  in region_dict["city"][province]:
                 return region_dict["city"][province][city]+"00"
             elif city_t in region_dict["town"][province]:
@@ -38,6 +38,24 @@ def city(province,city,region_dict):
             return -2
         return region_dict["town"][province][city]
 
+def city1(province,city,region_dict):
+    if city=="0" or city==-1 or city==0:
+        return city
+    sp_province=["北京","上海","天津","重庆"]
+    # ,"11","12","31","50","台湾省","香港特别行政区","澳门特别行政区"
+    # sp_city = ["北京市","上海市","天津市","重庆市",
+    #            "台湾省","香港特别行政区","澳门特别行政区"]
+    repeated_town = list(region_dict["repeated"].values())
+    if city in region_dict["province"]:
+        return region_dict["province"][city]+"0000"
+    else:
+        if province in sp_province:
+            province += "市"
+        if city in repeated_town:
+            print("repeated_region",city,province)
+        elif city not in region_dict["town1"][province]:
+            print("unexpected city",city,province)
+        return region_dict["town1"][province][city]
 def town_city_iter(province,city,region_dict):
     # print(province)
     for  k,v in region_dict["town"][province].items():
@@ -121,7 +139,7 @@ def column_trans(clm,enum_json,noEnum_json,region_json):
     issue_partial=partial(issueUpdated,issue_list=issue_list)
     guarantor_partial=partial(agency_guarantor,guarantor_list=guarantor_list)
     province_partial=partial(province,region_dict=region_dict)
-    city_partial=partial(city,region_dict=region_dict)
+    city_partial=partial(city1,region_dict=region_dict)
     clm_func={
     "date":time_clm,
     "bond_id":None,
@@ -193,6 +211,7 @@ def clauseabbr(x,idx):
 
 def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     csv_pd=pd.read_csv(csv_path)
+    csv_pd = csv_pd.loc[:,~csv_pd.columns.str.contains("^Unnamed")]
     csv_pd.fillna(-1,inplace=True)
     # csv_pd=pd.read_excel(csv_path)
     columns=csv_pd.columns.to_list()
@@ -256,7 +275,7 @@ if __name__=="__main__":
     #             noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
     #             region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
     trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year_sift2",
-                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_08032",
+                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_0808",
                 enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0726.json",
                 noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-26.20_15_14.json",
-                region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
+                region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\region.json")
