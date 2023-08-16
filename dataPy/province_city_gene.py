@@ -94,7 +94,7 @@ def merge_test(test_path,town_path,save_path):
     # print(test_pd.shape[0])
     town_pd = pd.read_csv(town_path,encoding = "utf-8-sig")
     # town_pd.rename(columns = {"CITY":"CITY_OLD","COUNTY":"CITY"},inplace = 1)
-    merge_pd = pd.merge(test_pd,town_pd,how="left",on=["PROVINCE","CITY"])
+    merge_pd = pd.merge(test_pd,town_pd,how="left",on=["PROVINCE","CITY","MUNICIPALBOND"])
     merge_pd = merge_pd.loc[:,~merge_pd.columns.str.contains("^Unnamed")]
     merge_pd.fillna(-1,inplace=True)
     if test_pd.shape[0]!=merge_pd.shape[0]:
@@ -169,6 +169,12 @@ def repeated_region(table_path,save_path):
 
 def code_repeated_region():
     pass
+
+def municipalBond_add(table_path,save_path):
+    table_pd = pd.read_csv(table_path,index_col=0)
+    table_pd["MUNICIPALBOND"] = [1]*table_pd.shape[0]
+    table_pd.to_csv(save_path,encoding = "utf-8-sig")
+# MUNICIPALBOND
 if __name__=="__main__":
     # table_path=r"D:\python_code\LSTM-master\bond_price\real_data\province_city_id.xlsx"
     # region_gene(table_path,
@@ -187,7 +193,9 @@ if __name__=="__main__":
     #          region_json = r"D:\python_code\LSTM-master\bond_price\dataPy\config\region.json")
     
     merge_batch(table_dir = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0808",
-                town_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\province_add\town_end.csv",
-                save_dir = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0808region")
+                town_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\province_add\town_endct.csv",
+                save_dir = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0809region")
     # repeated_region(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\province_add\city_data.csv",
     #                 save_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\province_add\city_repeated.csv")
+    # municipalBond_add(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\province_add\town_end.csv",
+    #                   save_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\province_add\town_endct.csv")

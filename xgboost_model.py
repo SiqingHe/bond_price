@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error,mean_absolute_error
 from sklearn import metrics
+from sklearn.ensemble import RandomForestRegressor
 from xgboost import plot_importance
 from matplotlib import pyplot as plt
 # from dataPy.data_split import X_column,y_column
@@ -15,6 +16,7 @@ from dataPy import dtUtils
 import os
 import numpy as np
 import logging
+from dataPy import updateRecycle
 
 cfg = xgboost_cfg.cfg
 cfg_param = xgboost_cfg.cfg.PARAM
@@ -120,6 +122,10 @@ def xgbValue_get(train_pd,valid_pd,test_pd,X_column,y_column):
     X_test,y_test = test_pd[X_column],test_pd[y_column]
     return X_train,y_train,X_valid,y_valid,X_test,y_test
 
+def Xy_Value(train_pd,X_column,y_column):
+    X_train,y_train = train_pd[X_column],train_pd[y_column]
+    return X_train,y_train
+
 def param_xgbTrain(param,saveDir,num_round,X_train,y_train,X_valid,y_valid):
     # num_round  =  3500 迭代次数
     Path(saveDir).mkdir(exist_ok = True,parents = True)
@@ -190,15 +196,19 @@ def residule_record(y_pred,test_pd,y_column,save_path,message="train"):
     credit_err_pd = credit_pd[credit_pd["|yt-yp|"]>0.1]
     logging.info("{} 信用债mae大于0.1数量 : {}".format(message, credit_err_pd.shape[0]))
     
-    credit_city_pd = credit_pd[credit_pd["|yt-yp|"]>0.1]
-    
-    save_credit_err = str(Path(save_path).parent.joinpath(Path(save_path).stem+"_berr_credit.csv"))
-    credit_err_pd.to_csv(save_credit_err,encoding="utf-8-sig")
-    
     credit_time_pd = credit_pd[(credit_pd["|yt-yp|"]>0.1) & (credit_pd["time_diff"]<3600) \
                                & (credit_pd["time_diff"]!=-1)]
     logging.info("{} 信用债mae大于0.1 且时间差小于3600 数量 : {}".\
                  format(message, credit_time_pd.shape[0]))
+    
+    credit_city_pd = credit_pd[credit_pd["MUNICIPALBOND"]==1]
+    logging.info("{} 城投债数量 : {}".format(message,credit_city_pd.shape[0]))
+    logging.info("{} 城投债mae : {}".format(message, np.mean(credit_city_pd["|yt-yp|"])))
+
+    save_credit_err = str(Path(save_path).parent.joinpath(Path(save_path).stem+"_berr_credit.csv"))
+    credit_err_pd.to_csv(save_credit_err,encoding="utf-8-sig")
+    
+    
     test_pd.to_csv(save_path,encoding = "utf-8-sig")
 
 def xgboost_analyse(model,save_path,importance_type="weight"):
@@ -222,6 +232,19 @@ def get_param(cfgPARAM):
          }
     return param
 
+def randForest(X_train,y_train,save_dir):
+    model = RandomForestRegressor(n_estimators = cfg.RF.N_ESTIMATORS,max_depth = cfg.RF.MAX_DEPTH,
+                                #   min_samples_leaf = 8,min_samples_split=8,
+                                  criterion = 'squared_error',n_jobs = cfg.RF.N_JOBS)
+    save_path = str(Path(save_dir).joinpath("rf_model.pkl"))
+    if not Path(save_path).exists():
+        # 训练模型
+        model.fit(X_train, y_train)
+        Path(save_path).parent.mkdir(exist_ok=True,parents=True)
+        joblib.dump(model, save_path)
+    else:
+        model=joblib.load(save_path)
+    return model
 def main():
     # TODO: add others xgboost
     current_path = os.path.abspath(os.path.dirname(__file__))
@@ -240,9 +263,27 @@ def main():
     X_train,y_train,X_valid,y_valid,X_test,y_test  =  xgbValue_get(train_pd,valid_pd,test_pd,X_column,y_column)
     dtUtils.configSave(cfg,model_save)
     model = param_xgbTrain(param,model_save,cfg.NUM_ROUND,X_train,y_train,X_valid,y_valid)
+    rf_model = randForest(X_train,y_train,model_save)
     train_pred = param_xgbPredict(model,X_train,y_train,message = "训练集")
     valid_pred = param_xgbPredict(model,X_valid,y_valid,message = "验证集")
     test_pred = param_xgbPredict(model,X_test,y_test,message = "测试集")
+    
+    rf_train_pred = rf_model.predict(X_train)
+    rf_valid_pred = rf_model.predict(X_valid)
+    rf_test_pred = rf_model.predict(X_test)
+    
+    train_pred = train_pred/2 + rf_train_pred/2
+    valid_pred = valid_pred/2 + rf_valid_pred/2
+    test_pred = test_pred/2 + rf_test_pred/2
+    
+    logging.info("randforest train mae:{}".format(mean_absolute_error(y_train,rf_train_pred)))
+    logging.info("randforest valid mae:{}".format(mean_absolute_error(y_valid,rf_valid_pred)))
+    logging.info("randforest test mae:{}".format(mean_absolute_error(y_test,rf_test_pred)))
+    
+    logging.info("ensemble train mae:{}".format(mean_absolute_error(y_train,train_pred)))
+    logging.info("ensemble valid mae:{}".format(mean_absolute_error(y_valid,valid_pred)))
+    logging.info("ensemble test mae:{}".format(mean_absolute_error(y_test,test_pred)))
+    
     save_train = str(Path(current_path).joinpath(model_save).joinpath("train_pred.csv"))
     save_valid = str(Path(current_path).joinpath(model_save).joinpath("valid_pred.csv"))
     save_test = str(Path(current_path).joinpath(model_save).joinpath("test_pred.csv"))
@@ -253,6 +294,42 @@ def main():
     save_gain = str(Path(current_path).joinpath(model_save).joinpath("importance_gain.png"))
     xgboost_analyse(model,save_importance)
     xgboost_analyse(model,save_gain,importance_type="gain")
+
+def modelSave(log_name):
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    today = datetime.datetime.now().strftime('%y.%m.%d')
+    model_save = dtUtils.increment_path(str(Path(current_path).joinpath(cfg.MODEL_TAG).joinpath(today).joinpath(cfg.MODEL_SAVE)))
+    Path(model_save).mkdir(exist_ok=True,parents=True)
+    log_save = str(Path(model_save).joinpath(Path(log_name).stem+"_{}.log".format(today)))
+    dtUtils.log_set(log_save,log_level = logging.INFO)
+    return model_save
+
+# def IsNew(x,bond):
+#     return x in 
+def updateByDayTest(table_path,distinct_json,test_days = 60):
+    table_pd = pd.read_csv(table_path,encoding = "utf-8")
+    distinct_date = dtUtils.json_read(distinct_json)
+    model_save = modelSave(cfg.LOG_NAME)
+    dtUtils.configSave(cfg,model_save)
+    param = get_param(cfg_param)
+    for i in range(-1*test_days,0,1):
+        valid_date = distinct_date[i]
+        train_datels = distinct_date[0:i]
+        train_pd,valid_pd = updateRecycle.train_valid(table_pd,valid_date,train_datels)
+        X_column = cfg.X_COLUMN
+        y_column = cfg.Y_COLUMN
+        X_train,y_train = Xy_Value(train_pd,X_column,y_column)
+        X_valid,y_valid = Xy_Value(valid_pd,X_column,y_column)
+        model = param_xgbTrain(param,model_save,cfg.NUM_ROUND,X_train,y_train,None,None)
+        message = "valid_{}".format(valid_date)
+        valid_pred = param_xgbPredict(model,X_valid,y_valid,message = message)
+        save_path = str(Path(model_save).joinpath("valid_{}.csv".format(valid_date)))
+        existed_bondls = train_pd["bond_id"].to_list()
+        valid_pd["is_present"] = valid_pd.apply(lambda x:x["bond_id"] in existed_bondls,axis = 1)
+        residule_record(valid_pred,valid_pd,y_column,save_path,message = message)
 if __name__ == "__main__":
     pass
-    main()
+    # main()
+    updateByDayTest(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0808to0814\allData.csv",
+                    distinct_json = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0808to0814\tradeDate_distinct.json",
+                    test_days = 60)

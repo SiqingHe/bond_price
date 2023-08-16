@@ -110,6 +110,7 @@ def termnote3(x):
     else:
         return None
     return res if res!="N" else 100
+
 def issueUpdated(x,issue_list):
     if x is None or x==0 or x==-1:
         return 0
