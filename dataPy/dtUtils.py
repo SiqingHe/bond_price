@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 import datetime
 import logging
+import time
 
 def json_read(json_path,encode="utf-8-sig"):
     with open(json_path,"r",encoding=encode) as wr:
@@ -114,8 +115,13 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     return path
 
 def tm_format_trans(tt):
-    tr=datetime.datetime.strptime(str(tt),"%Y%m%d") 
+    tr = datetime.datetime.strptime(str(tt),"%Y%m%d") 
     return tr.strftime("%Y-%m-%d")
+
+def timestamp2date(tic,mode="%Y%m%d"):
+    timeArray = time.localtime(tic)
+    date = time.strftime(mode,timeArray)
+    return date
 
 def configSave(cfg,saveDir):
     ticn=datetime.datetime.now().strftime('%y.%m.%d.%H.%M.%S')

@@ -4,6 +4,8 @@ import time
 from functools import partial
 from pathlib import Path
 from tqdm import tqdm
+import pandas_market_calendars as mcal
+import datetime
 
 def province(x,region_dict):
     # if x is None or x=="0":
@@ -77,7 +79,7 @@ def time_clm(tt,deal=False):
         else:
             s_t=time.strptime(tt,"%Y%m%d-%H:%M:%S")
     else:
-        tt=tt.strip(" 00:00:00")
+        tt=tt.replace(" 00:00:00","")#strip(" 00:00:00")
         if "/" in str(tt):
             s_t=time.strptime(tt,"%Y/%m/%d")
         elif "-" in tt:
@@ -210,6 +212,26 @@ def clauseabbr(x,idx):
     else:
         return 0
 
+def tradeDiff(time_end,time_start):
+    if time_start is None or time_start==-1 or time_start==0 or pd.isna(time_start):
+        return time_start
+    if time_end is None or time_end==-1 or time_end==0 or pd.isna(time_end):
+        return time_end
+    china_calendar = mcal.get_calendar('XSHG')
+    day_end = dtUtils.timestamp2date(time_end,mode="%Y-%m-%d")
+    day_start = dtUtils.timestamp2date(time_start,mode="%Y-%m-%d")
+    trading_df = china_calendar.schedule(pd.Timestamp(day_start), pd.Timestamp(day_end))
+    trade_days = trading_df.index.date.tolist()
+    tradeDay_diff = len(trade_days)-1
+    time_diff = int(time_end) - int(time_start)
+    divisor = time_diff//86400
+    remainer = time_diff%86400
+    day_diff = (datetime.datetime.strptime(day_end,"%Y-%m-%d").date()
+                -datetime.datetime.strptime(day_start,"%Y-%m-%d").date()).days
+    day_adj = day_diff - divisor
+    trade_diff = remainer + (tradeDay_diff-day_adj)*86400
+    return trade_diff
+
 def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     csv_pd=pd.read_csv(csv_path)
     csv_pd = csv_pd.loc[:,~csv_pd.columns.str.contains("^Unnamed")]
@@ -218,14 +240,15 @@ def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
     columns=csv_pd.columns.to_list()
     copy_pd=csv_pd.copy()
     ignore_ls=['Unnamed: 0','cjhx_rate','cjhx_quantile',"Unnamed: 0.1","CLAUSEABBR"]
+    
     for column in columns:
         if column in ignore_ls:continue
         trans=column_trans(column,enum_json,noEnum_json,region_json)
         if trans is not None:
             if column!="CITY":
-                copy_pd[column]=csv_pd.apply(lambda x:trans(x[column]),axis=1)
+                copy_pd[column] = csv_pd.apply(lambda x:trans(x[column]),axis=1)
             else:
-                copy_pd[column]=csv_pd.apply(lambda x:trans(x["PROVINCE"],x[column]),axis=1)
+                copy_pd[column] = csv_pd.apply(lambda x:trans(x["PROVINCE"],x[column]),axis=1)
     copy_pd.sort_values(by="deal_time",ascending=True,inplace=True)
     copy_pd["termnote2"]=csv_pd.apply(lambda x:termnote2(x["TERMNOTE1"]),axis=1)
     copy_pd["termnote3"]=csv_pd.apply(lambda x:termnote3(x["TERMNOTE1"]),axis=1)
@@ -236,9 +259,12 @@ def table_trans(csv_path,save_path,enum_json,noEnum_json,region_json):
         return
     copy_pd["org_date"] = csv_pd["deal_time"]
     copy_pd["time_diff"] = copy_pd["deal_time"].diff()
+    copy_pd["deal_time-1"] = copy_pd["deal_time"].shift(1)
+    copy_pd["tdtime_diff"] = copy_pd.apply(lambda x:tradeDiff(x["deal_time"],x["deal_time-1"]),axis=1)
     for yi in range(5):
         copy_pd["yield-{}".format(yi+1)] = copy_pd['yield'].shift(yi+1)
         copy_pd["time_diff-{}".format(yi+1)] = copy_pd['time_diff'].shift(yi+1)
+        copy_pd["tdtime_diff-{}".format(yi+1)] = copy_pd['tdtime_diff'].shift(yi+1)
         copy_pd["yd*diff-{}".format(yi+1)] = copy_pd["yield-{}".format(yi+1)]*copy_pd["time_diff-{}".format(yi+1)]
     # copy_pd["yield-1"]=copy_pd['yield'].shift(1)
     # copy_pd["yield-2"]=copy_pd['yield'].shift(2)
@@ -270,13 +296,20 @@ def trans_batch(csv_dir,save_dir,enum_json,noEnum_json,region_json):
 if __name__=="__main__":
     pass
     # province_dict=dtUtils.json_read(region_json)
-    # table_trans(csv_path=r"D:\python_code\LSTM-master\bond_price\real_data\combine_dir\dlFt_combine0714\010216.IB_7.csv",
-    #             save_path=r"D:\python_code\LSTM-master\bond_price\real_data\test\010216.IB_7_test.csv",
-    #             enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
-    #             noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-14.15_15_57.json",
-    #             region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\province_city_add.json")
-    trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year_sift2",
-                save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_0808",
-                enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0726.json",
+    table_trans(csv_path=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year_sift2\112288499.IB_3.csv",
+                save_path=r"D:\python_code\LSTM-master\bond_price\real_data\test\112288499.IB_test818.csv",
+                enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum.json",
                 noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-26.20_15_14.json",
                 region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\region.json")
+    # trans_batch(csv_dir=r"D:\python_code\LSTM-master\bond_price\real_data\excel2year_sift2",
+    #             save_dir=r"D:\python_code\LSTM-master\bond_price\dealed_dir\dealed_0817",
+    #             enum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\kindEnum_0726.json",
+    #             noEnum_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\no_Enum\noEnum_2023-07-26.20_15_14.json",
+    #             region_json=r"D:\python_code\LSTM-master\bond_price\dataPy\config\region.json")
+    # day_end = "2023-8-15"
+    # day_start = "2023-8-14"
+    # t11 = time.mktime(time.strptime(day_start,"%Y-%m-%d")) +1600
+    # t22 = time.mktime(time.strptime(day_end,"%Y-%m-%d")) +3200
+    # t11 = 1618243200
+    # t22 = 1629907200
+    # print(tradeDiff(time_end = t22,time_start = t11))

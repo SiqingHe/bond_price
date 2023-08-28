@@ -23,3 +23,9 @@ svg_reg.py
 # model 保存的训练模型
 # result 决策树推断和真实比较
 
+mkl-fft==1.3.6
+requests==2.29.0
+certifi==2022.12.7
+six==1.16.0
+idna 2.8
+urllib3 1.25.8

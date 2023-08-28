@@ -8,6 +8,10 @@ import torch
 import numpy as np
 from utils import get_data,scaler_trans
 from torch_loss import Rmse
+from xgboost_model import Xy_Value
+from config import xgboost_cfg
+xgb_cfg = xgboost_cfg.cfg
+import pandas as pd
 
 
 def train(model, X_train, y_train, num_epochs, learning_rate,save_path,batch_size):
@@ -28,7 +32,9 @@ def train(model, X_train, y_train, num_epochs, learning_rate,save_path,batch_siz
         # self.optimizer.param_groups[0]["lr"]
         for X,y in datald:
             # print(X,y)
-            # print(X.shape)
+            # print(X)
+            # print(y)
+            # print(X.shape,y.shape)
             X=X.reshape(X.shape[0],1,X.shape[1]).float()
             # X=X.float()
             y=y.float()
@@ -52,16 +58,21 @@ def train(model, X_train, y_train, num_epochs, learning_rate,save_path,batch_siz
     
 if __name__=="__main__":
     pass
-    train_path=r"D:\python_code\LSTM-master\model_bond\bond_trdataNonull\train.json"
-    valid_path=r"D:\python_code\LSTM-master\model_bond\bond_trdataNonull\valid.json"
-    train_data=np.array(get_data(train_path))
-    X_train,y_train=train_data[:,0:-1],train_data[:,-1]
-    X_train,scalex=scaler_trans(X_train)
-    y_train,scaley=scaler_trans(y_train)
+    # train_path=r"D:\python_code\LSTM-master\model_bond\bond_trdataNonull\train.json"
+    # valid_path=r"D:\python_code\LSTM-master\model_bond\bond_trdataNonull\valid.json"
+    # train_data=np.array(get_data(train_path))
+    # X_train,y_train=train_data[:,0:-1],train_data[:,-1]
+    # X_train,scalex=scaler_trans(X_train)
+    # y_train,scaley=scaler_trans(y_train)
+    train_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0818\train.csv"
+    train_pd = pd.read_csv(train_path)
+    X_train,y_train = Xy_Value(train_pd,xgb_cfg.X_COLUMN,xgb_cfg.Y_COLUMN)
     # model=mymodel()
     model=ResNet(1,1)
-    batch_size=100
-    save_path=r"D:\python_code\LSTM-master\model_bond\model\torch\torch_resnet_nlrmse.pth"
-    num_epochs=20
-    learning_rate=1e-4
+    batch_size=1000
+    save_path=r"D:\python_code\LSTM-master\bond_price\model\torch\torch_resnet_nlrmse0828.pth"
+    num_epochs=5
+    learning_rate=1e-2
+    X_train,scalex = scaler_trans(X_train.values)
+    y_train,scaley = scaler_trans(y_train.values)
     train(model, X_train, y_train, num_epochs, learning_rate,save_path,batch_size)

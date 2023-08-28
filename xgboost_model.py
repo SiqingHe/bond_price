@@ -100,9 +100,10 @@ def setsDtGet(train_path,valid_path,test_path):
     # test_pd = pd.read_excel(test_path)
     type = dict(pdtype)
     
-    train_pd = pd.read_csv(train_path,encoding = "utf-8-sig",dtype=type)
-    valid_pd = pd.read_csv(valid_path,encoding = "utf-8-sig",dtype=type)
-    test_pd = pd.read_csv(test_path,encoding = "utf-8-sig",dtype=type)
+    encoding_tp = "gbk"
+    train_pd = pd.read_csv(train_path,encoding = encoding_tp,dtype=type)
+    valid_pd = pd.read_csv(valid_path,encoding = encoding_tp,dtype=type)
+    test_pd = pd.read_csv(test_path,encoding = encoding_tp,dtype=type)
     
     # print(set(train_pd["GDP"].values.tolist()))
 
@@ -263,26 +264,26 @@ def main():
     X_train,y_train,X_valid,y_valid,X_test,y_test  =  xgbValue_get(train_pd,valid_pd,test_pd,X_column,y_column)
     dtUtils.configSave(cfg,model_save)
     model = param_xgbTrain(param,model_save,cfg.NUM_ROUND,X_train,y_train,X_valid,y_valid)
-    rf_model = randForest(X_train,y_train,model_save)
+    # rf_model = randForest(X_train,y_train,model_save)
     train_pred = param_xgbPredict(model,X_train,y_train,message = "训练集")
     valid_pred = param_xgbPredict(model,X_valid,y_valid,message = "验证集")
     test_pred = param_xgbPredict(model,X_test,y_test,message = "测试集")
     
-    rf_train_pred = rf_model.predict(X_train)
-    rf_valid_pred = rf_model.predict(X_valid)
-    rf_test_pred = rf_model.predict(X_test)
+    # rf_train_pred = rf_model.predict(X_train)
+    # rf_valid_pred = rf_model.predict(X_valid)
+    # rf_test_pred = rf_model.predict(X_test)
     
-    train_pred = train_pred/2 + rf_train_pred/2
-    valid_pred = valid_pred/2 + rf_valid_pred/2
-    test_pred = test_pred/2 + rf_test_pred/2
+    # train_pred = train_pred/2 + rf_train_pred/2
+    # valid_pred = valid_pred/2 + rf_valid_pred/2
+    # test_pred = test_pred/2 + rf_test_pred/2
     
-    logging.info("randforest train mae:{}".format(mean_absolute_error(y_train,rf_train_pred)))
-    logging.info("randforest valid mae:{}".format(mean_absolute_error(y_valid,rf_valid_pred)))
-    logging.info("randforest test mae:{}".format(mean_absolute_error(y_test,rf_test_pred)))
+    # logging.info("randforest train mae:{}".format(mean_absolute_error(y_train,rf_train_pred)))
+    # logging.info("randforest valid mae:{}".format(mean_absolute_error(y_valid,rf_valid_pred)))
+    # logging.info("randforest test mae:{}".format(mean_absolute_error(y_test,rf_test_pred)))
     
-    logging.info("ensemble train mae:{}".format(mean_absolute_error(y_train,train_pred)))
-    logging.info("ensemble valid mae:{}".format(mean_absolute_error(y_valid,valid_pred)))
-    logging.info("ensemble test mae:{}".format(mean_absolute_error(y_test,test_pred)))
+    # logging.info("ensemble train mae:{}".format(mean_absolute_error(y_train,train_pred)))
+    # logging.info("ensemble valid mae:{}".format(mean_absolute_error(y_valid,valid_pred)))
+    # logging.info("ensemble test mae:{}".format(mean_absolute_error(y_test,test_pred)))
     
     save_train = str(Path(current_path).joinpath(model_save).joinpath("train_pred.csv"))
     save_valid = str(Path(current_path).joinpath(model_save).joinpath("valid_pred.csv"))
@@ -312,7 +313,7 @@ def updateByDayTest(table_path,distinct_json,test_days = 60):
     model_save = modelSave(cfg.LOG_NAME)
     dtUtils.configSave(cfg,model_save)
     param = get_param(cfg_param)
-    for i in range(-1*test_days,0,1):
+    for i in range(-1*test_days,-80,1):
         valid_date = distinct_date[i]
         train_datels = distinct_date[0:i]
         train_pd,valid_pd = updateRecycle.train_valid(table_pd,valid_date,train_datels)
@@ -330,6 +331,6 @@ def updateByDayTest(table_path,distinct_json,test_days = 60):
 if __name__ == "__main__":
     pass
     # main()
-    updateByDayTest(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0808to0814\allData.csv",
-                    distinct_json = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0808to0814\tradeDate_distinct.json",
-                    test_days = 60)
+    updateByDayTest(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\allData.csv",
+                    distinct_json = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\tradeDate_distinct.json",
+                    test_days = 140)
