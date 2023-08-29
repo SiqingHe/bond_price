@@ -24,6 +24,9 @@ def train(model, X_train, y_train, num_epochs, learning_rate,save_path,batch_siz
 
     # 定义学习率衰减策略
     scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
+    # torch.cuda.set_device(0)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
 
     for epoch in range(num_epochs):
         num=0
@@ -35,9 +38,9 @@ def train(model, X_train, y_train, num_epochs, learning_rate,save_path,batch_siz
             # print(X)
             # print(y)
             # print(X.shape,y.shape)
-            X=X.reshape(X.shape[0],1,X.shape[1]).float()
+            X=X.reshape(X.shape[0],1,X.shape[1]).float().cuda()
             # X=X.float()
-            y=y.float()
+            y=y.float().cuda()
             model.train()
             optimizer.zero_grad()
             # print(X.shape)
@@ -64,13 +67,13 @@ if __name__=="__main__":
     # X_train,y_train=train_data[:,0:-1],train_data[:,-1]
     # X_train,scalex=scaler_trans(X_train)
     # y_train,scaley=scaler_trans(y_train)
-    train_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0818\train.csv"
+    train_path = r"/workspace/disk_c/python_code/LSTM-master/bond_price/dealed_dir/sets_split0818/train.csv"
     train_pd = pd.read_csv(train_path)
     X_train,y_train = Xy_Value(train_pd,xgb_cfg.X_COLUMN,xgb_cfg.Y_COLUMN)
     # model=mymodel()
     model=ResNet(1,1)
     batch_size=1000
-    save_path=r"D:\python_code\LSTM-master\bond_price\model\torch\torch_resnet_nlrmse0828.pth"
+    save_path=r"/workspace/disk_c/python_code/LSTM-master/bond_price/model/torch/torch_resnet_nlrmse08291.pth"
     num_epochs=5
     learning_rate=1e-2
     X_train,scalex = scaler_trans(X_train.values)

@@ -29,3 +29,5 @@ certifi==2022.12.7
 six==1.16.0
 idna 2.8
 urllib3 1.25.8
+https://www.hoemlte.com/
+https://github.com/dmlc/xgboost

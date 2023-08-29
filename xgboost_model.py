@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import xgboost as xgb
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -100,7 +101,7 @@ def setsDtGet(train_path,valid_path,test_path):
     # test_pd = pd.read_excel(test_path)
     type = dict(pdtype)
     
-    encoding_tp = "gbk"
+    encoding_tp = "utf-8-sig"
     train_pd = pd.read_csv(train_path,encoding = encoding_tp,dtype=type)
     valid_pd = pd.read_csv(valid_path,encoding = encoding_tp,dtype=type)
     test_pd = pd.read_csv(test_path,encoding = encoding_tp,dtype=type)
@@ -330,7 +331,7 @@ def updateByDayTest(table_path,distinct_json,test_days = 60):
         residule_record(valid_pred,valid_pd,y_column,save_path,message = message)
 if __name__ == "__main__":
     pass
-    # main()
-    updateByDayTest(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\allData.csv",
-                    distinct_json = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\tradeDate_distinct.json",
-                    test_days = 140)
+    main()
+    # updateByDayTest(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\allData.csv",
+    #                 distinct_json = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\tradeDate_distinct.json",
+    #                 test_days = 140)
