@@ -314,24 +314,27 @@ def updateByDayTest(table_path,distinct_json,test_days = 60):
     model_save = modelSave(cfg.LOG_NAME)
     dtUtils.configSave(cfg,model_save)
     param = get_param(cfg_param)
-    for i in range(-1*test_days,-80,1):
-        valid_date = distinct_date[i]
+    for i in range(-1*test_days,0,1):
+        test_date = distinct_date[i]
         train_datels = distinct_date[0:i]
-        train_pd,valid_pd = updateRecycle.train_valid(table_pd,valid_date,train_datels)
+        valid_date = distinct_date[i-1]
+        train_pd,test_pd = updateRecycle.train_valid(table_pd,test_date,train_datels)
+        valid_pd = table_pd[table_pd["date_org"]==str(valid_date)]
         X_column = cfg.X_COLUMN
         y_column = cfg.Y_COLUMN
         X_train,y_train = Xy_Value(train_pd,X_column,y_column)
         X_valid,y_valid = Xy_Value(valid_pd,X_column,y_column)
-        model = param_xgbTrain(param,model_save,cfg.NUM_ROUND,X_train,y_train,None,None)
-        message = "valid_{}".format(valid_date)
-        valid_pred = param_xgbPredict(model,X_valid,y_valid,message = message)
-        save_path = str(Path(model_save).joinpath("valid_{}.csv".format(valid_date)))
+        X_test,y_test = Xy_Value(test_pd,X_column,y_column)
+        model = param_xgbTrain(param,model_save,cfg.NUM_ROUND,X_train,y_train,X_valid,y_valid)
+        message = "test_{}".format(test_date)
+        test_pred = param_xgbPredict(model,X_test,y_test,message = message)
+        save_path = str(Path(model_save).joinpath("test_{}.csv".format(test_date)))
         existed_bondls = train_pd["bond_id"].to_list()
-        valid_pd["is_present"] = valid_pd.apply(lambda x:x["bond_id"] in existed_bondls,axis = 1)
-        residule_record(valid_pred,valid_pd,y_column,save_path,message = message)
+        test_pd["is_present"] = test_pd.apply(lambda x:x["bond_id"] in existed_bondls,axis = 1)
+        residule_record(test_pred,test_pd,y_column,save_path,message = message)
 if __name__ == "__main__":
     pass
-    main()
-    # updateByDayTest(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\allData.csv",
-    #                 distinct_json = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\tradeDate_distinct.json",
-    #                 test_days = 140)
+    # main()
+    updateByDayTest(table_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\allData.csv",
+                    distinct_json = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\tradeDate_distinct.json",
+                    test_days = 80)

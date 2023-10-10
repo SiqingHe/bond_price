@@ -27,8 +27,30 @@ _C.MODEL_SAVE = "res"
 _C.MODEL_TAG = "model/xgboost"
 _C.LOG_NAME = "xgboost.log"
 # ,"date"
-_C.X_COLUMN = ["deal_time",
-               "date",
+_C.TYPE_COLUMN = [
+                  "ISSUERUPDATED",
+                  "RATINGOUTLOOKS",
+                  "INTERESTTYPE",
+                  "PROVINCE",
+                  "CITY",
+                  "WINDL2TYPE",
+                  "INDUSTRY_SW",
+                  "ISSUE_ISSUEMETHOD",
+                  "EXCH_CITY",
+                  "NATURE1",
+                  "AGENCY_GRNTTYPE",
+                  "AGENCY_GUARANTOR",
+                  "CLAUSEABBR_0",
+                  "CLAUSEABBR_1",
+                  "CLAUSEABBR_2",
+                  "CLAUSEABBR_3",
+                  "CLAUSEABBR_4",
+                  "CLAUSEABBR_5",
+                  "CLAUSEABBR_6"
+                  ]
+_C.X_COLUMN = [
+  # "deal_time",
+  #              "date",
                "PTMYEAR","TERMNOTE1","TERMIFEXERCISE","ISSUERUPDATED",
           "LATESTPAR","ISSUEAMOUNT","OUTSTANDINGBALANCE","LATESTISSURERCREDITRATING",
           "RATINGOUTLOOKS","RATE_RATEBOND",
@@ -41,13 +63,13 @@ _C.X_COLUMN = ["deal_time",
           "RATE_RATEGUARANTOR","LISTINGORNOT1","EMBEDDEDOPT","CLAUSEABBR_0",
           "CLAUSEABBR_1","CLAUSEABBR_2","CLAUSEABBR_3","CLAUSEABBR_4",
           "CLAUSEABBR_5",
-          "CLAUSEABBR_6","termnote2","termnote3",
-          "time_diff",
-          "tdtime_diff",
+          "CLAUSEABBR_6","termnote2","termnote3"
+          # "time_diff",
+          # "tdtime_diff",
           # "time_diff-1",
           # "time_diff-2","time_diff-3","time_diff-4","time_diff-5",
           # "yd*diff-1",
-          "yield-1","yield-2","yield-3","yield-4","yield-5"
+          # "yield-1","yield-2","yield-3","yield-4","yield-5"
             # "GDP","GENERAL_BUDGET_MONEY","SSSR_RADIO",
             # "CZZJL",
             # "ZFXJJ_MONEY","ZFZWYE","QYFZCTYX",

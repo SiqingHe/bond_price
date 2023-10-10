@@ -67,13 +67,13 @@ if __name__=="__main__":
     # X_train,y_train=train_data[:,0:-1],train_data[:,-1]
     # X_train,scalex=scaler_trans(X_train)
     # y_train,scaley=scaler_trans(y_train)
-    train_path = r"/workspace/disk_c/python_code/LSTM-master/bond_price/dealed_dir/sets_split0818/train.csv"
+    train_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0818\train.csv"
     train_pd = pd.read_csv(train_path)
     X_train,y_train = Xy_Value(train_pd,xgb_cfg.X_COLUMN,xgb_cfg.Y_COLUMN)
     # model=mymodel()
     model=ResNet(1,1)
     batch_size=1000
-    save_path=r"/workspace/disk_c/python_code/LSTM-master/bond_price/model/torch/torch_resnet_nlrmse08291.pth"
+    save_path=r"D:\python_code\LSTM-master\bond_price\model\torch\torch_resnet_nlrmse0913.pth"
     num_epochs=5
     learning_rate=1e-2
     X_train,scalex = scaler_trans(X_train.values)

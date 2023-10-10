@@ -67,7 +67,7 @@ def stat_save(combine_pd,save_path,it_ratiols=[0.1,0.05,0.01], cd_ratio = 0.1,me
 def valid_combine(table_dir,save_path):
     Path(save_path).parent.mkdir(exist_ok = True,parents = True)
     table_ls = []
-    mark = re.compile(r"valid_\d{8}")
+    mark = re.compile(r"test_\d{8}")
     for table_path in Path(table_dir).glob("*.csv"):
         match = re.search(mark,table_path.name).group(0)
         if match != table_path.stem:continue
@@ -123,5 +123,5 @@ if __name__ == "__main__":
     # train_date = distinct_datels[0:-37]
     # train_date = [str(int(_)) for _  in distinct_datels if int(_) < int(valid_date)]
     # train_valid(all_pd,valid_date,train_date)
-    valid_combine(table_dir = r"D:\python_code\LSTM-master\bond_price\model\xgboost\23.08.23\res2",
-                  save_path = r"D:\python_code\LSTM-master\bond_price\model\xgboost\23.08.23\res2_combine\valid_combine.csv")
+    valid_combine(table_dir = r"D:\python_code\LSTM-master\bond_price\model\xgboost\23.08.30\res3",
+                  save_path = r"D:\python_code\LSTM-master\bond_price\model\xgboost\23.08.30\res3_combine\valid_combine.csv")
