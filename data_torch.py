@@ -14,6 +14,7 @@ import time
 cfg = xgboost_cfg.cfg
 import numba
 from siameseNetwork import similarity
+from collections import defaultdict
 
 
 class mydataset(Dataset):
@@ -52,9 +53,92 @@ class dataIter(Dataset):
         else:
             # index = (index + 1)%self.len
             return self.__getitem__((index + 1) % len(self))
-                
+
+class dataIter2(Dataset):
+    def __init__(self,dataPd,idx_types,idx_nums):
+        self.dataPd = dataPd
+        self.idx_types = idx_types
+        self.idx_nums = idx_nums
+        self.len = int((self.dataPd.shape[0]-1)*self.dataPd.shape[0]/2)
+        # self.targets=targets
+    def __len__(self):
+        return self.dataPd.shape[0]
+    def __getitem__(self, index):
+        # while True:
+        col = int((index*2+0.25)**0.5+0.5)
+        row = int(index - (col-1)*col/2)
+        x=self.dataPd.iloc[col,:].values
+        y=self.dataPd.iloc[row,:].values
+        dis = similarity(x[0:-1],y[0:-1],self.idx_types,self.idx_nums)
+        # print(x,y,dis,x[-1]-y[-1])
+        if abs(x[-1]-y[-1])<=0.05 and dis<0.2:
+            label = 1
+            return x,y,label
+        elif abs(x[-1]-y[-1])>0.1:
+            label = 0
+            return x,y,label
+        else:
+            # index = (index + 1)%self.len
+            return self.__getitem__((index + 1) % len(self))
+        
+class DataIterPND(Dataset):
+    def __init__(self,dataPd,idx_types,idx_nums):
+        self.dataPd = dataPd
+        self.idx_types = idx_types
+        self.idx_nums = idx_nums
+        self.len = int((self.dataPd.shape[0]-1)*self.dataPd.shape[0]/2)
+        # self.targets=targets
+    def __len__(self):
+        return self.dataPd.shape[0]
+    def __getitem__(self, index):
+        # while True:
+        # col = int((index*2+0.25)**0.5+0.5)
+        # row = int(index - (col-1)*col/2)
+        # x=self.dataPd.iloc[col,:].values
+        # y=self.dataPd.iloc[row,:].values
+        # dis = similarity(x[0:-1],y[0:-1],self.idx_types,self.idx_nums)
+        item = self.dataPd.iloc[index,:]
+        yval = item.values[-1]
+        rd_choice = np.random.choice(2)
+        dataPd_bf = self.dataPd.iloc[0:index,:]
+        if rd_choice:
+            # pos_row = dataPd_bf.apply(lambda x:positive_sift(x,item,self.idx_types,self.idx_nums),axis =1 )
+            # print(pos_row,type(pos_row))
+            df_positive = dataPd_bf[np.abs(dataPd_bf["yield"]-yval)<0.01]
+            if df_positive.shape[0]==0:
+                return self.__getitem__((index + 1) % len(self))
+            rd_pos = df_positive.iloc[np.random.choice(df_positive.shape[0]),:]
+            return item.values,rd_pos.values,1
+        else:
+            df_negative = dataPd_bf[np.abs(dataPd_bf["yield"]-yval)>0.1]
+            if df_negative.shape[0]==0:
+                return self.__getitem__((index + 1) % len(self))
+            rd_ng = df_negative.iloc[np.random.choice(df_negative.shape[0]),:]
+            return item.values,rd_ng.values,0
+        # return df_negative
+        # dfs_copy = dfs.apply(lambda x: (x - x.mean()) / x.std())
+        # print(x,y,dis,x[-1]-y[-1])
+            # index = (index + 1)%self.len
+                       
         # return index,col,row
         # print(index,col,row)
+class DataIterCache(Dataset):
+    def __init__(self,datapkl):
+        self.data = datapkl
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self, index):
+        return self.data[index]
+
+def positive_sift(item1,item2,idx_types,idx_nums):
+    values1 = item1.values
+    values2 = item2.values
+    dis = similarity(values1[0:-1],values2[0:-1],idx_types,idx_nums)
+    return ((dis<0.2) and abs(values1[-1]-values2[-1])<0.05).numpy()[0]
+
+def negtive_sift():
+    pass
+
 class dataInference(Dataset):
     def __init__(self,dataPd,inferItem):
         self.dataPd = dataPd
@@ -63,7 +147,7 @@ class dataInference(Dataset):
     def __len__(self):
         return self.dataPd.shape[0]
     def __getitem__(self, index):
-        return self.inferItem[0:-1],self.dataPd.iloc[index][0:-1]      
+        return self.inferItem.values[0:-1],self.dataPd.iloc[index].values[0:-1]      
        
     
 class metricDataset(Dataset):
@@ -429,27 +513,36 @@ if __name__=="__main__":
     #     for i in range(3):
     #         data = [i+1 for _ in range(3)]
     #         pickle.dump(data, file)
-    data_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0818\valid.csv"
-    dfs = pd.read_csv(data_path)
-    dfs = dfs[cfg.X_COLUMN+cfg.Y_COLUMN]
-    dfs_copy = dfs.copy()
-    dfs_copy2 = dfs.copy()
-    nums_clm = [_ for _  in cfg.X_COLUMN if _ not in cfg.TYPE_COLUMN]
-    dfs_copy = dfs.apply(lambda x: (x - x.mean()) / x.std())
-    dfs_copy.fillna(-1,inplace = True)
-    for _ in nums_clm:
-        dfs_copy2[_] = dfs_copy[_]
-    #     dfs_copy[_] = dfs.apply(lambda x: (x[_] - x[_].mean()) / x[_].std(), axis = 1)
-    idx_types = [cfg.X_COLUMN.index(_) for _ in cfg.TYPE_COLUMN]
-    idx_nums = [cfg.X_COLUMN.index(_) for _  in cfg.X_COLUMN if _ not in cfg.TYPE_COLUMN]
-    dataset = dataIter(dfs,idx_types,idx_nums)
-    batch_size = 3
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    num = 0
-    for batch in dataloader:
-        if num>10:break
-        print(batch)
-        num += 1
+    # data_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0818\valid.csv"
+    
+    
+    # data_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\allData.csv"
+    # dfs = pd.read_csv(data_path)
+    # dfs = dfs[dfs['date']<1664553600]
+    # dfs = dfs[cfg.X_COLUMN+cfg.Y_COLUMN]
+    # dfs_copy = dfs.copy()
+    # dfs_copy2 = dfs.copy()
+    # nums_clm = [_ for _  in cfg.X_COLUMN if _ not in cfg.TYPE_COLUMN]
+    # dfs_copy = dfs.apply(lambda x: (x - x.mean()) / x.std())
+    # dfs_copy.fillna(-1,inplace = True)
+    # for _ in nums_clm:
+    #     dfs_copy2[_] = dfs_copy[_]
+    # #     dfs_copy[_] = dfs.apply(lambda x: (x[_] - x[_].mean()) / x[_].std(), axis = 1)
+    # idx_types = [cfg.X_COLUMN.index(_) for _ in cfg.TYPE_COLUMN]
+    # idx_nums = [cfg.X_COLUMN.index(_) for _  in cfg.X_COLUMN if _ not in cfg.TYPE_COLUMN]
+    # # dataset = dataIter(dfs,idx_types,idx_nums)
+    # # DataIterPND(Dataset)
+    # dataset = DataIterPND(dfs,idx_types,idx_nums)
+    # batch_size = 200
+    # dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    # num = 0
+    # time_dic = defaultdict(int)
+    # for i,batch in enumerate(dataloader):
+    #     if num>100000:break
+    #     time_dic[i] = time.time()
+    #     if i>0:
+    #         print(i,time_dic[i]-time_dic[i-1])
+    #     num += 1
     # dataset = metricDataset(dfs,cfg.X_COLUMN,cfg.Y_COLUMN)
     # batch_size = 2
     # dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
@@ -457,6 +550,8 @@ if __name__=="__main__":
     # print(len(dataloader))5000
     # for batch in dataloader:
     #     print(batch)
+    
+    
     # save_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\sets_split0818\valid"
     # cache_triplets(dfs,save_path,label= "valid",batch_num = 5000)
     # file = h5py.File(save_path, "r")
@@ -481,4 +576,19 @@ if __name__=="__main__":
 
     # # 关闭文件
     # file.close()
-        
+    
+    pkl_path = r"D:\python_code\LSTM-master\bond_price\dealed_dir\combine0818to0818\data0930.pkl"
+    with open(pkl_path,"rb") as rd:
+        datacache=pickle.load(rd)
+    dataset = DataIterCache(datacache)
+    batch_size = 2
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    num = 0
+    time_dic = defaultdict(int)
+    for i,batch in enumerate(dataloader):
+        if num>10:break
+        time_dic[i] = time.time()
+        if i>0:
+            print(i,time_dic[i]-time_dic[i-1])
+        print(batch)
+        num += 1

@@ -11,12 +11,13 @@ class SiameseNetwork(nn.Module):
 
         # 最后的全连接层用于计算相似度
         self.fc = nn.Sequential(
-            nn.Linear(in_features=45, out_features=256),
+            nn.Linear(in_features=45, out_features=64),
             nn.ReLU(inplace=True),
-            nn.Linear(in_features=256, out_features=128),
-            nn.ReLU(inplace=True),
-            nn.Linear(in_features=128, out_features=64)
-        ).to("cuda")
+            nn.Linear(in_features=64, out_features=48),
+            # nn.ReLU(inplace=True),
+            # nn.Linear(in_features=128, out_features=64)
+        )
+        # .to("cuda")
 
     def forward_one(self, x):
         # 前向传播一个样本
@@ -66,21 +67,23 @@ class TransformerBackbone(nn.Module):
         super(TransformerBackbone, self).__init__()
 
         # 位置编码
-        # self.position_encoder = PositionalEncoding(input_dim, dropout)
+        self.position_encoder = PositionalEncoding(input_dim, dropout)
         
         # Transformer编码器层
         encoder_layers = nn.TransformerEncoderLayer(d_model=input_dim, nhead=num_heads, dim_feedforward=hidden_dim, dropout=dropout)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers).to("cuda")
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
+        # .to("cuda")
         
     def forward(self, x):
         # 输入数据的形状为 (sequence_length, batch_size, input_dim)
         
         # 添加位置编码
         # x = x.float().cuda()
-        # x = self.position_encoder(x)
+        x = self.position_encoder(x)
         
         # 传递数据通过Transformer编码器
         # print(x.device)
+        # print("tranformer",x.shape)
         x = self.transformer_encoder(x)
         # print(x.device)
         return x
@@ -90,9 +93,12 @@ class PositionalEncoding(nn.Module):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
 
-        pe = torch.zeros(max_len, d_model).float().cuda()
-        position = torch.arange(0, max_len, dtype=torch.float32).unsqueeze(1).float().cuda()
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)).float().cuda()
+        pe = torch.zeros(max_len, d_model)
+        # .float().cuda()
+        position = torch.arange(0, max_len, dtype=torch.float32).unsqueeze(1)
+        # .float().cuda()
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        # .float().cuda()
         # print(d_model)
         # print(div_term)
         # print((position * div_term).shape)
@@ -121,7 +127,10 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
 
     def forward(self, output1, output2, label):
-        euclidean_distance = nn.functional.pairwise_distance(output1, output2, keepdim = True)
+        # euclidean_distance = nn.functional.pairwise_distance(output1, output2, keepdim = True)
+        # print(euclidean_distance.shape,label.shape)
+        # print(torch.cat((euclidean_distance,label.reshape(label.shape[0],1)),dim=1))
+        euclidean_distance = 1- nn.functional.cosine_similarity(output1, output2,dim=1)
         loss_contrastive = torch.mean((label) * torch.pow(euclidean_distance, 2) +
                                       (1-label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2))
         # TODO: 如果label为不确定是否相似，则不计算损失
@@ -133,6 +142,7 @@ class Similarity(nn.Module):
 
     def forward(self, output1, output2, label):
         euclidean_distance = nn.functional.pairwise_distance(output1, output2, keepdim = True)
+        print(euclidean_distance)
         loss_contrastive = torch.mean((1-label) * torch.pow(euclidean_distance, 2) +
                                       (label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2))
         # TODO: 如果label为不确定是否相似，则不计算损失
@@ -145,7 +155,7 @@ def similarity(array1,array2,idx_types,idx_nums):
     tp1 = array1[:,idx_types]
     tp2 = array2[:,idx_types]
     total = len(idx_nums)+len(idx_types)
-    dis1 = torch.sum(tp1 == tp2,dim=1)/len(idx_types)
+    dis1 = 1 - torch.sum(tp1 == tp2,dim=1)/len(idx_types)
     # numls = set(range(len(array1)))-set(type_idls)
     num1 = array1[:,idx_nums]
     num2 = array2[:,idx_nums]
